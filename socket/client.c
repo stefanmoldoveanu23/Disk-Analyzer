@@ -1,16 +1,53 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <arpa/inet.h>
+#include <syslog.h>
 #include <errno.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define PORT 8080
 
+void daemonize()
+{
+	pid_t pid = fork();
+	if (pid < 0) {
+		perror(NULL);
+		exit(EXIT_FAILURE);
+	}
+	
+	if (pid) {
+		exit(EXIT_SUCCESS);
+	}
+	
+	setsid();
+	
+	pid = fork();
+	if (pid < 0) {
+		perror(NULL);
+		exit(EXIT_FAILURE);
+	}
+	
+	if (pid) {
+		exit(EXIT_SUCCESS);
+	}
+	
+	umask(0);
+	chdir("/");
+	
+	char id[15];
+	sprintf(id, "%d", getpid());
+	openlog(id, LOG_PID, LOG_DAEMON);
+}
+
 int main()
 {
+	daemonize();
+	
 	int client_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (client_fd < 0) {
 		perror("Socket creation failed.\n");
@@ -43,10 +80,11 @@ int main()
 	}
 	
 	int valread = read(client_fd, buffer, 1024);
-	
-	printf("%s\n", buffer);
+	syslog(LOG_NOTICE, "%s\n", buffer);
 	
 	close(server_fd);
+	shutdown(client_fd, SHUT_RDWR);
+	closelog();
 	
 	return 0;
 }
