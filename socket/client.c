@@ -38,14 +38,15 @@ void daemonize()
 	
 	umask(0);
 	chdir("/");
-	
-	char id[15];
-	sprintf(id, "%d", getpid());
-	openlog(id, LOG_PID, LOG_DAEMON);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+	if (argc != 2) {
+		perror("Wrong amount of arguments.\n");
+		return 1;
+	}
+	
 	daemonize();
 	
 	int client_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -71,20 +72,21 @@ int main()
 		return errno;
 	}
 	
-	char buffer[1024] = { 0 };
-	char *hello = "Hello from client!";
 	
-	if (send(client_fd, hello, strlen(hello), 0) == -1) {
+	if (send(client_fd, argv[1], strlen(argv[1]), 0) == -1) {
 		perror(NULL);
 		return errno;
 	}
 	
-	int valread = read(client_fd, buffer, 1024);
-	syslog(LOG_NOTICE, "%s\n", buffer);
+	if (argv[1][0] != 'a') {
+		char buffer[1024] = { 0 };
+	
+		int valread = read(client_fd, buffer, 1024);
+		printf("%s\n", buffer);
+	}
 	
 	close(server_fd);
 	shutdown(client_fd, SHUT_RDWR);
-	closelog();
 	
 	return 0;
 }

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define PORT 8080
 
@@ -38,10 +39,6 @@ void daemonize()
 	
 	umask(0);
 	chdir("/");
-	
-	char id[15];
-	sprintf(id, "%d", getpid());
-	openlog(id, LOG_PID, LOG_DAEMON);
 }
 
 int main()
@@ -77,23 +74,29 @@ int main()
 		return errno;
 	}
 	
-	int client_fd = accept(server_fd, (struct sockaddr*)(&address), (socklen_t*)(&addrlen));
-	if (client_fd < 0) {
-		perror(NULL);
-		return errno;
+	while (1)
+	{
+		int client_fd = accept(server_fd, (struct sockaddr*)(&address), (socklen_t*)(&addrlen));
+		if (client_fd < 0) {
+			perror(NULL);
+			return errno;
+		}
+		
+		char buffer[1024] = { 0 };
+		
+		int valread = read(client_fd, buffer, 1024);
+		
+		if (buffer[0] == 'a') {
+			close(client_fd);
+			break;
+		}
+		
+		send(client_fd, buffer, strlen(buffer), 0);
+		
+		close(client_fd);
 	}
 	
-	char buffer[1024] = { 0 };
-	char *hello = "Hello from server!";
-	
-	int valread = read(client_fd, buffer, 1024);
-	syslog(LOG_NOTICE, "%s\n", buffer);
-	
-	send(client_fd, hello, strlen(hello), 0);
-	
-	close(client_fd);
 	shutdown(server_fd, SHUT_RDWR);
-	closelog();
 	
 	return 0;
 }
