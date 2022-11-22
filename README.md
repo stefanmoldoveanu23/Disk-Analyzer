@@ -8,6 +8,7 @@ TASKS:
 - [x] Implement socket communication(with daemons)
 	- [x] Implement multiple client management;
 	- [x] Introduce threads to multiple client management;
+- [x] Test using dirent to parse through directory contents;
 - [ ] Implement getopt for option handling;
 - [ ] Implement data structure for information management(two files, one for basic information, one for analysis result);
 - [ ] Create different branches and have each branch handle specific option tasks;
