@@ -25,11 +25,13 @@ TASKS:
 - [x] Learn daemons;
 - [x] Test using multiple .c files for single .h file;
 - [x] Test using getcwd for caller working directory;
-- [x] Implement socket communication(with daemons)
+- [x] Implement socket communication(with daemons):
 	- [x] Implement multiple client management;
 	- [x] Introduce threads to multiple client management;
 - [x] Test using dirent to parse through directory contents;
 - [ ] Implement getopt for option handling;
-- [ ] Implement data structure for information management(two files, one for basic information, one for analysis result);
+- [ ] Implement data structure for information management:
+	- [x] Implement header file;
+	- [ ] Implement source file;
 - [ ] Create different branches and have each branch handle specific option tasks;
 - TBD
