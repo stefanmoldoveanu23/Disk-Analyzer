@@ -29,9 +29,10 @@ TASKS:
 	- [x] Implement multiple client management;
 	- [x] Introduce threads to multiple client management;
 - [x] Test using dirent to parse through directory contents;
-- [ ] Implement getopt for option handling;
+- [x] Implement systemd service to execute program at startup and shutdown;
 - [ ] Implement data structure for information management:
 	- [x] Implement header file;
 	- [ ] Implement source file;
+- [ ] Implement getopt for option handling;
 - [ ] Create different branches and have each branch handle specific option tasks;
 - TBD

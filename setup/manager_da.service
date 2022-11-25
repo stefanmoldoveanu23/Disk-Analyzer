@@ -1,0 +1,9 @@
+[Unit]
+Description= Disk Analyzer manager startup and shutdown helper
+
+[Service]
+ExecStart=/bin/bash -c "/home/characterme/Disk-Analyzer/onclose/onstart.sh start"
+ExecStop=/bin/bash -c "/home/characterme/Disk-Analyzer/onclose/onstart.sh stop"
+
+[Install]
+WantedBy=multi-user.target
