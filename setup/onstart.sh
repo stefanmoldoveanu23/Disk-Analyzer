@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# I will have to modify the file path to the working directory
 FILE=/home/characterme/Disk-Analyzer/onclose/file
 
 case "$1" in
