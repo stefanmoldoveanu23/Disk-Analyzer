@@ -23,10 +23,10 @@ Requests:
 7. Request list of all analysis tasks, with ID and path.
 
 I will also implement multiple data structures:
-	- data structure for analysis job; will hold flags for status, suspended, etc. It will also have a mutex, because multiple requests might use one analysis at the same time. And, obviously, it will hold the analysis results;
-	- data structure for requests management; will hold a list of job analyses, a double-linked list of all active thread ids, and a list of all completed thread addresses. Periodically, I will parse the list of completed threads, and using the address I will join those threads and eliminate them from the double-linked list;
-	- when closing the computer, there may be job analyses still in progress; in order to not lose that progress, the data will be memorised in a tree data structure, and will be stored in a binary file for easy retrieval;
-	- further modifications may be made.
+- data structure for analysis job; will hold flags for status, suspended, etc. It will also have a mutex, because multiple requests might use one analysis at the same time. And, obviously, it will hold the analysis results;
+- data structure for requests management; will hold a list of job analyses, a double-linked list of all active thread ids, and a list of all completed thread addresses. Periodically, I will parse the list of completed threads, and using the address I will join those threads and eliminate them from the double-linked list;
+- when closing the computer, there may be job analyses still in progress; in order to not lose that progress, the data will be memorised in a tree data structure, and will be stored in a binary file for easy retrieval;
+- further modifications may be made.
 
 TASKS:
 - [x] Learn daemons;
