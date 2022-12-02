@@ -31,7 +31,7 @@ A manager will receive requests for clients.
 - further modifications may be made.
 
 ## How does it work?
-![alt text](https://user-images.githubusercontent.com/100515480/205258694-674d26d7-2384-4f3f-b7e8-1a7b52878ccd.png)
+![alt text](https://user-images.githubusercontent.com/100515480/205260201-cb1b4e32-ef8e-43c3-bbde-78d56a4900d9.png)
 Because analyses can have different priorities, they have to be made in different processes. However, if a request turns into a separate process, the only way for a child process to 
 
 TASKS:
