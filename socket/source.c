@@ -18,34 +18,6 @@
 int done = 0;
 pthread_mutex_t mtx;
 
-void daemonize()
-{
-	pid_t pid = fork();
-	if (pid < 0) {
-		perror(NULL);
-		exit(EXIT_FAILURE);
-	}
-	
-	if (pid) {
-		exit(EXIT_SUCCESS);
-	}
-	
-	setsid();
-	
-	pid = fork();
-	if (pid < 0) {
-		perror(NULL);
-		exit(EXIT_FAILURE);
-	}
-	
-	if (pid) {
-		exit(EXIT_SUCCESS);
-	}
-	
-	umask(0);
-	chdir("/");
-}
-
 void *thread_func(void *v)
 {
 	int client_fd = *((int *)v);
@@ -74,7 +46,7 @@ void *thread_func(void *v)
 
 int main()
 {
-	daemonize();
+	daemon(1, 1);
 	
 	if (pthread_mutex_init(&mtx, NULL)) {
 		perror(NULL);

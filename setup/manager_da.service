@@ -4,9 +4,10 @@ Description= Disk Analyzer manager startup and shutdown helper
 #I will have to modify th onstart.sh path from setup to the working directory
 
 [Service]
-ExecStart=/bin/bash -c "/home/characterme/Disk-Analyzer/onclose/onstart.sh start"
-ExecStop=/bin/bash -c "/home/characterme/Disk-Analyzer/onclose/onstart.sh stop"
-killMode=control-group
+ExecStart=/home/characterme/Disk-Analyzer/setup/onstart
+KillMode=process
+SendSIGKILL=no
+StandardOutput=journal+console
 
 [Install]
 WantedBy=multi-user.target

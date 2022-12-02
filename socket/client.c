@@ -12,34 +12,6 @@
 
 #define PORT 8080
 
-void daemonize()
-{
-	pid_t pid = fork();
-	if (pid < 0) {
-		perror(NULL);
-		exit(EXIT_FAILURE);
-	}
-	
-	if (pid) {
-		exit(EXIT_SUCCESS);
-	}
-	
-	setsid();
-	
-	pid = fork();
-	if (pid < 0) {
-		perror(NULL);
-		exit(EXIT_FAILURE);
-	}
-	
-	if (pid) {
-		exit(EXIT_SUCCESS);
-	}
-	
-	umask(0);
-	chdir("/");
-}
-
 int main(int argc, char *argv[])
 {
 	if (argc != 2) {
@@ -47,7 +19,10 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	
-	daemonize();
+	if (daemon(1, 1)) {
+		perror(NULL);
+		return errno;
+	}
 	
 	int client_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (client_fd < 0) {

@@ -1,19 +1,21 @@
 # Disk-Analyzer
 OS Project - Disk Analyzer
 
-The project will analyze a disk and offer information.
-Options:
+The project will analyze a disk using the [fts library](https://man7.org/linux/man-pages/man3/fts.3.html) and offer information.
+## Options:
 1. Begin analysis of directory.
-	- You can give a specific priority; default is 2(normal).
+	- You can give a specific [priority](https://linux.die.net/man/2/setpriority); default is 2(normal).
 2. Remove analysis/results.
 3. Suspend/Resume analysis.
 4. Print status of analysis(pending, in progress, complete).
 5. Print analysis result.
 6. List all analysis tasks, with ID and path.
 
+Options will be handles using the [getopt](https://man7.org/linux/man-pages/man3/getopt.3.html) functionalities.
+
 Since some actions can affect others(like suspending an analysis), there will need to be a way for the daemons to communicate with eachother. The easiest way to do that is to create a manager that is running at all times which holds all information, and every time the user calls "da", a request will be sent to the manager. For that purpose, we will use [sockets](https://www.geeksforgeeks.org/socket-programming-cc/).
 A manager will receive requests for clients.
-Requests:
+## Requests:
 1. Ask to start analysis with given path.
 2. Ask to remove analysis with given ID.
 3. Ask to suspend analysis with given ID.
@@ -22,11 +24,15 @@ Requests:
 6. Request analysis result.
 7. Request list of all analysis tasks, with ID and path.
 
-I will also implement multiple data structures:
+## I will also implement multiple data structures:
 - data structure for analysis job; will hold flags for status, suspended, etc. It will also have a mutex, because multiple requests might use one analysis at the same time. And, obviously, it will hold the analysis results;
 - data structure for requests management; will hold a list of job analyses, a double-linked list of all active thread ids, and a list of all completed thread addresses. Periodically, I will parse the list of completed threads, and using the address I will join those threads and eliminate them from the double-linked list. Since multiple threads will use the completed threads list, I will also need a mutex;
 - when closing the computer, there may be job analyses still in progress; in order to not lose that progress, the data will be memorised in a tree data structure, and will be stored in a binary file for easy retrieval;
 - further modifications may be made.
+
+## How does it work?
+![alt text](https://user-images.githubusercontent.com/100515480/205258694-674d26d7-2384-4f3f-b7e8-1a7b52878ccd.png)
+Because analyses can have different priorities, they have to be made in different processes. However, if a request turns into a separate process, the only way for a child process to 
 
 TASKS:
 - [x] Learn daemons;
