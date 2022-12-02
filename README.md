@@ -11,7 +11,7 @@ The project will analyze a disk using the [fts library](https://man7.org/linux/m
 5. Print analysis result.
 6. List all analysis tasks, with ID and path.
 
-Options will be handles using the [getopt](https://man7.org/linux/man-pages/man3/getopt.3.html) functionalities.
+Options will be handled using the [getopt](https://man7.org/linux/man-pages/man3/getopt.3.html) functionalities.
 
 Since some actions can affect others(like suspending an analysis), there will need to be a way for the daemons to communicate with eachother. The easiest way to do that is to create a manager that is running at all times which holds all information, and every time the user calls "da", a request will be sent to the manager. For that purpose, we will use [sockets](https://www.geeksforgeeks.org/socket-programming-cc/).
 A manager will receive requests for clients.
