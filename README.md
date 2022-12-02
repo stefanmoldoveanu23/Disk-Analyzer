@@ -32,9 +32,26 @@ A manager will receive requests for clients.
 
 ## How does it work?
 ![alt text](https://user-images.githubusercontent.com/100515480/205260201-cb1b4e32-ef8e-43c3-bbde-78d56a4900d9.png)
-Because analyses can have different priorities, they have to be made in different processes. However, if a request turns into a separate process, the only way for a child process to 
+Because analyses can have different priorities, they have to be made in different processes. However, if a request turns into a separate process, the only ways for two processes to communicate are through shared memory, which is limited and clunky, or through sockets, which is more manageable.
+However, the analysis results processes connecting to the same socket that clients do will cause the requests to get processed slower; we will handle that by creating two sockets: one handles client, the other one handles results. These two sockets will accept connections in two different threads.
+The finished analyses thread just needs to read an id and change the analysis' status to "done", so it can just do that serially.
+The requests thread however might need to send a result back to the client, so it is better in this case to create new threads that handle a request.
+If a requests asks for a new analysis, the thread will get an unused ID, it will send te corresponding message to the client, and only then it will send the request to start the analysis. The thread doesn't need to wait for the analysis to finish, so it will just close.
+For all other requests, the thread will solve it by itself.
+After finishing an analysis, the process will write the results in a file, after which it will send a request to the complete analyses socket to check the analysis as "done".
 
-TASKS:
+### How does it handle shutdown
+At shutdown, the threads manager process will receive a SIGTERM signal. When a process receives a signal, it will be caught by any of the threads that don't block it. I want specifically the main thread to catch it, so the results thread, the request thread, and the request solver threads will all block SIGTERM.
+The main thread will manually send the SIGINT signal to the results and request threads with [pthread_kill](https://man7.org/linux/man-pages/man3/pthread_kill.3.html).
+The results thread will just solve the current result and close. It's easy to handle because it works serially.
+The requests thread will send call [pthread_cancel](https://man7.org/linux/man-pages/man3/pthread_cancel.3.html). The reason for that is because some threads will have to change flags, which needs to be done before the threads is closed. Threads can suspend cancellation by using the [pthread_setcancelstate and pthread_setcanceltype](https://man7.org/linux/man-pages/man3/pthread_setcancelstate.3.html).
+At the initial fork, the threads manager will be the parent, so it will have access to the pid of the fork manager. Because of that, the thread manager process will send the SIGTERM signal to the fork manager process, which will further send it's signal to all of its children(either with the pid of 0, which sends the signal to all processes in the same control group, or by just memorizing all child processes and sending the signal to them one by one).
+Each analysis will handle SIGTERM by immediatly exiting out of the analysis function, and writing the progress into a file. When starting the computer again, the request manager will look for all of the unfinished analyses and send requests to the fork manager. When an analysis normally ends, it writes the result into that same folder, so if at shutdown an analysis ended but didn't have time to send the message to the result manager, at startup it will be requested to do an analysis aready finished, so it will need a way to differentiate between a string that represents an analysis result or an analysis progress.
+When reading an analysis result, input needs to know first how long it is, in order to know how muchi it should read. Because of that, the first for bytes at the start of the file will represent an int equal to the size of the result. If the file contains the progress instead, the first 4 bytes will represent an int equal to -1. This way the analysis process can differentiate between the two. 
+
+A signal handler function can only do asynchronous actions, because it halts the program even if it is inside an operation. If we want to interact with the rest of the program, we will need to use the [sig_atomic_t](https://www.alphacodingskills.com/c/notes/c-signal-sig-atomic-t.php) type. A variable of this type can safely be modified inside of a signal handler.
+
+##TASKS:
 - [x] Learn daemons;
 	- Intentionally [orphaned processes](https://stackoverflow.com/a/17955149). Only the parent process runs in the foreground, but the child processes will run in the background.
 - [x] Test using getcwd for caller working directory;
