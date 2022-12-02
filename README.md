@@ -25,9 +25,9 @@ A manager will receive requests for clients.
 7. Request list of all analysis tasks, with ID and path.
 
 ## I will also implement multiple data structures:
-- data structure for analysis job; will hold flags for status, suspended, etc. It will also have a mutex, because multiple requests might use one analysis at the same time. And, obviously, it will hold the analysis results;
+- data structure for analysis job; will hold flags for status, suspended, etc. It will also have a mutex, because multiple requests might use one analysis at the same time. It will also hold the file descriptor for the file that holds the result;
 - data structure for requests management; will hold a list of job analyses, a double-linked list of all active thread ids, and a list of all completed thread addresses. Periodically, I will parse the list of completed threads, and using the address I will join those threads and eliminate them from the double-linked list. Since multiple threads will use the completed threads list, I will also need a mutex;
-- when closing the computer, there may be job analyses still in progress; in order to not lose that progress, the data will be memorised in a tree data structure, and will be stored in a binary file for easy retrieval;
+- when closing the computer, there may be job analyses still in progress; in order to not lose that progress, the data will be memorised in a tree data structure, and will be stored in a file for easy retrieval;
 - further modifications may be made.
 
 ## How does it work?
@@ -40,7 +40,7 @@ The finished analyses thread just needs to read an id and change the analysis' s
 
 The requests thread however might need to send a result back to the client, so it is better in this case to create new threads that handle a request.
 
-If a requests asks for a new analysis, the thread will get an unused ID, it will send te corresponding message to the client, and only then it will send the request to start the analysis. The thread doesn't need to wait for the analysis to finish, so it will just close.
+If a requests asks for a new analysis, the thread will get an unused ID, it will send te corresponding message to the client, and only then it will send the request to start the analysis. The thread doesn't need to wait for the analysis to finish, so it will just close. The fork manager, after forking, will send the PID of the new analysis to the result thread, so that the analysis can be suspended, resumed or deleted directly by the request solver thread.
 
 For all other requests, the thread will solve it by itself.
 
@@ -78,6 +78,15 @@ A signal handler function can only do asynchronous actions, because it halts the
 - [ ] Implement data structures for information management:
 	- [x] Implement header file;
 	- [ ] Implement source file;
-- [ ] Implement getopt for option handling;
-- [ ] Create different branches and have each branch handle specific option tasks;
+- [ ] Implement client functionality;
+	- [ ] Implement getopt for option handling;
+- [ ] Implement manager functionality:
+	- [ ] Implement thread manager:
+		- [ ] Implement request thread;
+		- [ ] Implement results thread;
+		- [ ] Handle startup;
+		- [ ] Handle shutdown;
+	- [ ] Implement fork manager:
+		- [ ] Implement analysis that handles interruption;
+		- [ ] Handle shutdown;
 - TBD
