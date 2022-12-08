@@ -10,21 +10,21 @@ struct task{
 };
 
 /// appends an int to a request string
-int appendInt(int val, char *dest);
+int appendInt(int src, char *dest);
 
 /// appends a string to a request string
-int appendString(char *string, char *dest);
+int appendString(char *src, char *dest);
 
 /// gets a task instance and translates it to a string
-char *taskToString(struct task *tsk);
+int taskToString(struct task src, char **dest);
 
 /// reads an int from a request file descriptor
-int readInt(int fd);
+int readInt(int fd, int *dest);
 
 /// reads a string from a request file descriptor
-char *readString(int fd);
+int readString(int fd, char **dest);
 
 /// gets a request file descriptor and translates its input to a task instance
-struct task *readTask(int fd);
+int readTask(int fd, struct task *dest);
 
 #endif
