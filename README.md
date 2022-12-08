@@ -75,11 +75,12 @@ A signal handler function can only do asynchronous actions, because it halts the
 - [x] Test using dirent to parse through directory contents;
 - [x] Implement systemd service to execute program at startup and shutdown;
 	- Since the manager needs to run at all times, there needs to be a way to make it run automatically at system startup, and a way to ask it to close itself(and handle pending requests) at shutdown. At shutdown it will send the manager(and its children) the SIGTERM signal.
-- [ ] Implement data structures for information management:
-	- [ ] Implement header file;
-	- [ ] Implement source file;
+- [x] Implement data structures for information management:
+	- [x] Implement header file;
+	- [x] Implement source file;
 - [ ] Implement client functionality;
-	- [ ] Implement getopt for option handling;
+	- [x] Implement getopt for option handling;
+	- [ ] Implement socket connection functionality;
 - [ ] Implement manager functionality:
 	- [ ] Implement thread manager:
 		- [ ] Implement request thread;
