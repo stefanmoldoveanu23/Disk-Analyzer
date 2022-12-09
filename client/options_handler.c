@@ -16,7 +16,7 @@ const struct option long_options[] = {
 		{0, 0, 0, 0}
 	};
 
-int get_task(int argc, char **argv, struct task *tsk)
+int get_task(const int argc, char **argv, struct task *tsk)
 {	
 	errno = 0;
 	int opt_1 = getopt_long(argc, argv, options, long_options, NULL);

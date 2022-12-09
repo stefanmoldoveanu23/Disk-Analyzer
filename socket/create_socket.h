@@ -2,6 +2,7 @@
 #define CREATE_SOCKET_H
 
 #include "sys/socket.h"
+#include "arpa/inet.h"
 
 struct socket_connection{
 	int client_fd;
@@ -10,9 +11,9 @@ struct socket_connection{
 };
 
 /// create a socket and prepare it to accept connections on given port
-struct socket_connection *create_socket_acceptor(int port);
+int create_socket_acceptor(struct socket_connection *connection, const int port);
 
 /// create a socket and prepare it to connect to listening sockets on given port
-struct socket_connection *create_socket_connector(int port);
+int create_socket_connector(struct socket_connection *connection, const int port);
 
 #endif

@@ -8,6 +8,6 @@ extern const char *options;
 extern const struct option long_options[9];
 
 /// generate task from arguments
-int get_task(int argc, char **argv, struct task *tsk);
+int get_task(const int argc, char **argv, struct task *tsk);
 
 #endif

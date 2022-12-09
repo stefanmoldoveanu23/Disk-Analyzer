@@ -5,20 +5,24 @@
 #include "string.h"
 #include "unistd.h"
 
-int appendInt(int src, char *dest)
+int appendInt(const int src, char *dest)
 {
 	char *start = dest + strlen(dest);
-	return snprintf(start, 5, "%.4x", src);
+	char val[4];
+	memcpy(val, &src, 4);
+	return snprintf(start, 4, "%s", val);
 }
 
-int appendString(char *src, char *dest)
+int appendString(const char *src, char *dest)
 {
 	int sz = strlen(src);
 	char *start = dest + strlen(dest);
-	return snprintf(start, 5 + strlen(src), "%04x%s", sz, src);
+	
+	if appendInt(sz, dest);
+	
 }
 
-int taskToString(struct task src, char **dest)
+int taskToString(const struct task src, char **dest)
 {
 	switch (src.cnt) {
 		case 6: {
@@ -85,7 +89,7 @@ int taskToString(struct task src, char **dest)
 	return 0;
 }
 
-int readStringBySize(int fd, int sz, char **dest)
+int readStringBySize(const int fd, const int sz, char **dest)
 {
 	*dest = (char *)malloc(sz + 1);
 	if (!(*dest)) {
@@ -108,7 +112,7 @@ int readStringBySize(int fd, int sz, char **dest)
 	return 0;
 }
 
-int readInt(int fd, int *dest)
+int readInt(const int fd, int *dest)
 {
 	char *string;
 	readStringBySize(fd, 4, &string);
@@ -123,7 +127,7 @@ int readInt(int fd, int *dest)
 	return 0;
 }
 
-int readString(int fd, char **dest)
+int readString(const int fd, char **dest)
 {
 	int sz;
 	if (readInt(fd, &sz)) {
@@ -133,7 +137,7 @@ int readString(int fd, char **dest)
 	return readStringBySize(fd, sz, dest);
 }
 
-int readTask(int fd, struct task *dest)
+int readTask(const int fd, struct task *dest)
 {	
 	if (readInt(fd, &(dest->cnt))) {
 		return -1;
@@ -149,6 +153,7 @@ int readTask(int fd, struct task *dest)
 			if (readString(fd, &(dest->path))) {
 				return -1;
 			}
+			break;
 		}
 		default: {
 			if (readInt(fd, &(dest->id))) {
