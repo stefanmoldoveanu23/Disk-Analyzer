@@ -8,18 +8,18 @@
 int appendInt(const int src, char *dest)
 {
 	char *start = dest + strlen(dest);
-	char val[4];
-	memcpy(val, &src, 4);
-	return snprintf(start, 4, "%s", val);
+	return snprintf(start, 5, "%.04d", src);
 }
 
 int appendString(const char *src, char *dest)
 {
 	int sz = strlen(src);
+	if (appendInt(sz, dest) < 0) {
+		return -1;
+	}
+	
 	char *start = dest + strlen(dest);
-	
-	if appendInt(sz, dest);
-	
+	return snprintf(start, sz + 1, "%s", src);
 }
 
 int taskToString(const struct task src, char **dest)
@@ -109,6 +109,8 @@ int readStringBySize(const int fd, const int sz, char **dest)
 		left -= cnt;
 	}
 	
+	(*dest)[sz] = '\0';
+	
 	return 0;
 }
 
@@ -121,7 +123,7 @@ int readInt(const int fd, int *dest)
 		return -1;
 	}
 	
-	(*dest) = (string[0] << 24) | (string[1] << 16) | (string[2] << 8) | string[3];
+	*dest = atoi(string);
 
 	free(string);
 	return 0;

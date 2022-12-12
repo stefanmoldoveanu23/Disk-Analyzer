@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "../task/task.h"
 #include "../socket/create_socket.h"
@@ -48,6 +49,10 @@ int main()
 		default: {
 			printf("Id: %d\n", tsk.id);
 		}
+	}
+	
+	if (tsk.cnt == 1) {
+		free(tsk.path);
 	}
 	
 	close(connection.client_fd);
