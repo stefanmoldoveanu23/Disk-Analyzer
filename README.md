@@ -80,7 +80,8 @@ A signal handler function can only do asynchronous actions, because it halts the
 	- [x] Implement source file;
 - [ ] Implement client functionality;
 	- [x] Implement getopt for option handling;
-	- [ ] Implement socket connection functionality;
+	- [x] Implement socket connection functionality;
+	- [ ] I just need to receive the result and print it;
 - [ ] Implement manager functionality:
 	- [ ] Implement thread manager:
 		- [ ] Implement request thread;
