@@ -64,6 +64,10 @@ When reading an analysis result, input needs to know first how long it is, in or
 
 A signal handler function can only do asynchronous actions, because it halts the program even if it is inside an operation. If we want to interact with the rest of the program, we will need to use the [sig_atomic_t](https://www.alphacodingskills.com/c/notes/c-signal-sig-atomic-t.php) type. A variable of this type can safely be modified inside of a signal handler.
 
+
+### Using an individual mutex for each analysis job is a sweet idea, but it DOESN'T WORK because of the removal request!!! A different request may be told that the id exists, and before getting the chance to lock the mutex, the removal request removes the analysis with that id, and now to mutex lock gives an error. The only solution is to accept a structure-wide mutex. Fortunately, the only time-consuming requests are creating and removing an analysis, but these ones already needed to lock the entire structure; all the ather requests just need to read some information, so it's acceptable.
+
+
 ## TASKS:
 - [x] Learn daemons;
 	- Intentionally [orphaned processes](https://stackoverflow.com/a/17955149). Only the parent process runs in the foreground, but the child processes will run in the background.
@@ -84,6 +88,7 @@ A signal handler function can only do asynchronous actions, because it halts the
 	- [ ] I just need to receive the result and print it;
 - [ ] Implement manager functionality:
 	- [ ] Implement thread manager:
+		- [ ] Implement treap data structure for storing analyses;
 		- [ ] Implement request thread;
 		- [ ] Implement results thread;
 		- [ ] Handle startup;
