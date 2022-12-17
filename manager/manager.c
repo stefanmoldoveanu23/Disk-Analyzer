@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
-#include "../task/task.h"
-#include "../socket/create_socket.h"
+//#include "../task/task.h"
+//#include "../socket/create_socket.h"
 
-#include "thread_manager.h"
+//#include "thread_manager.h"
+
+#include "../analysis_ds/analysis.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -14,6 +17,19 @@
 
 int main()
 {
+	srand(time(NULL));
+	struct treap *trp = NULL;
+	
+	for (int i = 0; i < 100000; ++i) {
+		if (insert_treap_id(&trp, i)) {
+			perror("1");
+			return 1;
+		}
+	}
+	
+	clear_treap(&trp);
+	
+	/*
 	daemon(1, 1);
 	
 	struct socket_connection connection;
@@ -59,6 +75,8 @@ int main()
 	
 	close(connection.client_fd);
 	shutdown(connection.server_fd, SHUT_RDWR);
+	*/
+	
 	
 	return 0;
 }

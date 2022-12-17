@@ -88,7 +88,7 @@ A signal handler function can only do asynchronous actions, because it halts the
 	- [ ] I just need to receive the result and print it;
 - [ ] Implement manager functionality:
 	- [ ] Implement thread manager:
-		- [ ] Implement treap data structure for storing analyses;
+		- [x] Implement treap data structure for storing analyses;
 		- [ ] Implement request thread;
 		- [ ] Implement results thread;
 		- [ ] Handle startup;
