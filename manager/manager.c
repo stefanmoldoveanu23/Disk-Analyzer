@@ -22,7 +22,7 @@ int main()
 		return 1;
 	}
 	
-	for (int i = 0; i < 1; ++i) {
+	for (int i = 0; i < 2; ++i) {
 		int addlen = sizeof(man.connection.address);
 		man.connection.client_fd = accept(man.connection.server_fd, (struct sockaddr *)(&(man.connection.address)), (socklen_t *)(&addlen));
 		if (man.connection.client_fd < 0) {
@@ -61,6 +61,7 @@ int main()
 			close(man.connection.client_fd);
 			continue;
 		}
+		++(man.analysis_cnt);
 
 		close(man.connection.client_fd);
 	}

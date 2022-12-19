@@ -59,7 +59,6 @@ int handle_startup(struct thread_manager *man)
 		return -1;
 	}
 	
-	int cnt;
 	char *string = (char *)malloc(11);
 	if (!string) {
 		perror("Error allocating memory to string in order to read amount of saved analyses");
@@ -79,9 +78,9 @@ int handle_startup(struct thread_manager *man)
 		close(fd);
 		return -1;
 	} else if (!total_read) {
-		cnt = 0;
+		man->analysis_cnt = 0;
 	} else {
-		cnt = atoi(string);
+		man->analysis_cnt = atoi(string);
 	}
 	free(string);
 	
@@ -89,7 +88,7 @@ int handle_startup(struct thread_manager *man)
 	
 	int id, mx_id = -1;
 	
-	while (cnt--) {
+	for (int i = 0; i < man->analysis_cnt; ++i) {
 		struct analysis *anal = (struct analysis *)malloc(sizeof(struct analysis));
 		if (!anal) {
 			perror("Error allocating memory to anal variable");
@@ -162,6 +161,10 @@ void handle_shutdown(struct thread_manager *man)
 {
 	/* IT IS GOING TO BE MORE COMPLEX, BUT I NEED TO IMPLEMENT THE FORK MANAGER FIRST */
 	int fd = open(ANALYSES_PATH, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+	char cnt[15] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+	snprintf(cnt, 11, "%.010d", man->analysis_cnt);
+	write(fd, cnt, 10);
+	
 	save_treap(&(man->analyses), fd);
 	close(fd);
 	

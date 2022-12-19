@@ -8,6 +8,7 @@
 
 
 struct thread_manager{
+	int analysis_cnt;
 	struct socket_connection connection;
 	
 	pthread_mutex_t analyses_mutex;
