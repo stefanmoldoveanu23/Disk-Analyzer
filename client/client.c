@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 
 #include "options_handler.h"
-#include "../socket/create_socket.h"
+#include "../dstructs/create_socket.h"
 
 #define PORT 8080
 
@@ -31,8 +31,6 @@ int main(int argc, char *argv[])
 	if (taskToString(tsk, &request)) {
 		return 1;
 	}
-	
-	printf("%s\n", request);
 	
 	struct socket_connection connection;
 	if (create_socket_connector(&connection, PORT)) {

@@ -1,11 +1,10 @@
-#include "analysis.h"
-
 #include <stdlib.h>
 #include <pthread.h>
-#include <limits.h>
 #include <stdio.h>
 
-struct treap *create_node(const int id)
+#include "treap.h"
+
+struct treap *create_node(const int id, struct analysis *anal)
 {
 	struct treap *ret = (struct treap *)malloc(sizeof(struct treap));
 	
@@ -14,9 +13,9 @@ struct treap *create_node(const int id)
 	}
 	
 	ret->id = id;
-	ret->heap_val = rand() % RAND_MAX;
+	ret->heap_val = rand();
 	
-	ret->anal = NULL;
+	ret->anal = anal;
 	
 	ret->chld_left = NULL;
 	ret->chld_right = NULL;
@@ -51,10 +50,10 @@ void swing_right(struct treap **trp)
 }
 
 
-int insert_treap_id(struct treap **trp, const int id)
+int insert_treap_new(struct treap **trp, const int id, struct analysis *anal)
 {
 	if (!(*trp)) {
-		(*trp) = create_node(id);
+		(*trp) = create_node(id, anal);
 		if (!(*trp)) {
 			return 1;
 		}
@@ -63,11 +62,11 @@ int insert_treap_id(struct treap **trp, const int id)
 	
 	if (id < (*trp)->id) {
 		if ((*trp)->chld_left) {
-			if (insert_treap_id(&((*trp)->chld_left), id)) {
+			if (insert_treap_new(&((*trp)->chld_left), id, anal)) {
 				return 1;
 			}
 		} else {
-			struct treap *new = create_node(id);
+			struct treap *new = create_node(id, anal);
 			if (!new) {
 				return 1;
 			}
@@ -76,11 +75,11 @@ int insert_treap_id(struct treap **trp, const int id)
 		}
 	} else {
 		if ((*trp)->chld_right) {
-			if (insert_treap_id(&((*trp)->chld_right), id)) {
+			if (insert_treap_new(&((*trp)->chld_right), id, anal)) {
 				return 1;
 			}
 		} else {
-			struct treap *new = create_node(id);
+			struct treap *new = create_node(id, anal);
 			if (!new) {
 				return 1;
 			}
@@ -128,33 +127,28 @@ void insert_treap_node(struct treap **trp, struct treap *node)
 }
 
 
-struct treap *get_greatest_smaller(struct treap *trp)
-{
-	if (!(trp->chld_left)) {
-		return NULL;
+int find_treap(struct treap *trp, const int id, struct analysis **anal) {
+	if (!trp) {
+		if (anal) {
+			*anal = NULL;
+		}
+		
+		return 0;
 	}
 	
-	trp = trp->chld_left;
-	while (trp->chld_right) {
-		trp = trp->chld_right;
+	if (trp->id == id) {
+		if (anal) {
+			*anal = trp->anal;
+		}
+		
+		return 1;
 	}
 	
-	return trp;
-}
-
-
-struct treap *get_smallest_greater(struct treap *trp)
-{
-	if (!(trp->chld_right)) {
-		return NULL;
+	if (trp->id < id) {
+		return find_treap(trp->chld_right, id, anal);
 	}
 	
-	trp = trp->chld_right;
-	while (trp->chld_left) {
-		trp = trp->chld_left;
-	}
-	
-	return trp;
+	return find_treap(trp->chld_left, id, anal);
 }
 
 
@@ -218,6 +212,15 @@ int remove_treap(struct treap **trp, const int id)
 void clear_treap(struct treap **trp)
 {
 	while (*trp) {
+		remove_treap(trp, (*trp)->id);
+	}
+}
+
+
+void save_treap(struct treap **trp, int fd)
+{
+	while (*trp) {
+		analysis_write((*trp)->id, (*trp)->anal, fd);
 		remove_treap(trp, (*trp)->id);
 	}
 }

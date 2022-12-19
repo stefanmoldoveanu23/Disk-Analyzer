@@ -1,13 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
-//#include "../task/task.h"
-//#include "../socket/create_socket.h"
-
-//#include "thread_manager.h"
-
-#include "../analysis_ds/analysis.h"
+#include "../dstructs/task.h"
+#include "thread_manager.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -17,66 +14,58 @@
 
 int main()
 {
-	srand(time(NULL));
-	struct treap *trp = NULL;
-	
-	for (int i = 0; i < 100000; ++i) {
-		if (insert_treap_id(&trp, i)) {
-			perror("1");
-			return 1;
-		}
-	}
-	
-	clear_treap(&trp);
-	
-	/*
 	daemon(1, 1);
 	
-	struct socket_connection connection;
-	if (create_socket_acceptor(&connection, PORT)) {
-		perror(NULL);
+	struct thread_manager man;
+	if (handle_startup(&man)) {
+		perror("Error when starting up thread manager");
 		return 1;
 	}
 	
-	int addlen = sizeof(connection.address);
-	connection.client_fd = accept(connection.server_fd, (struct sockaddr *)(&connection.address), (socklen_t *)(&addlen));
-	if (connection.client_fd < 0) {
-		perror(NULL);
-		shutdown(connection.server_fd, SHUT_RDWR);
-		return 1;
-	}
-	
-	struct task tsk;
-	if (readTask(connection.client_fd, &tsk)) {
-		perror(NULL);
-		close(connection.client_fd);
-		shutdown(connection.server_fd, SHUT_RDWR);
-		return 1;
-	}
-	
-	printf("Task: %d\n", tsk.cnt);
-	switch (tsk.cnt) {
-		case 1: {
-			printf("Path: %s\n", tsk.path);
-			printf("Priority: %d\n", tsk.priority);
-			break;
+	for (int i = 0; i < 1; ++i) {
+		int addlen = sizeof(man.connection.address);
+		man.connection.client_fd = accept(man.connection.server_fd, (struct sockaddr *)(&(man.connection.address)), (socklen_t *)(&addlen));
+		if (man.connection.client_fd < 0) {
+			perror("Error when accepting connection");
+			handle_shutdown(&man);
+			return 1;
 		}
-		case 6: {
-			break;
+		
+		struct task tsk;
+		if (readTask(man.connection.client_fd, &tsk)) {
+			perror(NULL);
+			close(man.connection.client_fd);
+			handle_shutdown(&man);
+			return 1;
 		}
-		default: {
-			printf("Id: %d\n", tsk.id);
+		
+		int id = tsk.cnt;
+		struct analysis *anal = (struct analysis *)malloc(sizeof(struct analysis));
+		
+		if (!anal) {
+			perror(NULL);
+			free(tsk.path);
+			close(man.connection.client_fd);
+			continue;
 		}
-	}
-	
-	if (tsk.cnt == 1) {
+		
+		anal->total_time = 0;
+		anal->path = strdup(tsk.path);
+		anal->status = ANALYSIS_PENDING;
+		anal->suspended = ANALYSIS_RESUMED;
+		
 		free(tsk.path);
+		
+		if (insert_treap_new(&(man.analyses), id, anal)) {
+			perror(NULL);
+			close(man.connection.client_fd);
+			continue;
+		}
+
+		close(man.connection.client_fd);
 	}
-	
-	close(connection.client_fd);
-	shutdown(connection.server_fd, SHUT_RDWR);
-	*/
-	
+
+	handle_shutdown(&man);
 	
 	return 0;
 }
