@@ -1,4 +1,4 @@
-#include "thread_manager.h"
+#include "requests_manager.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,7 +36,7 @@ void forks_startup(struct treap *trp)
 }
 
 
-int handle_startup(struct thread_manager *man)
+int requests_startup(struct requests_manager *man)
 {
 	srand(time(NULL));
 	
@@ -194,7 +194,7 @@ int handle_startup(struct thread_manager *man)
 }
 
 
-void handle_shutdown(struct thread_manager *man)
+void requests_shutdown(struct requests_manager *man)
 {
 	/* IT IS GOING TO BE MORE COMPLEX, BUT I NEED TO IMPLEMENT THE FORK MANAGER FIRST */
 	int fd = open(ANALYSES_PATH, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);

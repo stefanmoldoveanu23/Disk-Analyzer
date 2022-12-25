@@ -4,7 +4,7 @@
 #include <time.h>
 
 #include "../dstructs/task.h"
-#include "thread_manager.h"
+#include "requests_manager.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -16,8 +16,8 @@ int main(int argc, char *argv[])
 {
 	daemon(1, 1);
 	
-	struct thread_manager man;
-	if (handle_startup(&man)) {
+	struct requests_manager man;
+	if (requests_startup(&man)) {
 		perror("Error when starting up thread manager");
 		return 1;
 	}
@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 		man.connection.client_fd = accept(man.connection.server_fd, (struct sockaddr *)(&(man.connection.address)), (socklen_t *)(&addlen));
 		if (man.connection.client_fd < 0) {
 			perror("Error when accepting connection");
-			handle_shutdown(&man);
+			requests_shutdown(&man);
 			return 1;
 		}
 		
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 		if (readTask(man.connection.client_fd, &tsk)) {
 			perror(NULL);
 			close(man.connection.client_fd);
-			handle_shutdown(&man);
+			requests_shutdown(&man);
 			return 1;
 		}
 		
