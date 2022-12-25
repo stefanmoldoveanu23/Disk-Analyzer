@@ -87,6 +87,7 @@ A signal handler function can only do asynchronous actions, because it halts the
 	- [x] Implement socket connection functionality;
 	- [ ] I just need to receive the result and print it;
 - [ ] Implement manager functionality:
+	- [x] Implement trie data structure for storing paths;
 	- [ ] Implement thread manager:
 		- [x] Implement treap data structure for storing analyses;
 		- [ ] Implement request thread;
