@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include "../dstructs/treap.h"
+#include "../dstructs/tree.h"
 #include "../dstructs/create_socket.h"
 
 
@@ -13,6 +14,7 @@ struct thread_manager{
 	
 	pthread_mutex_t analyses_mutex;
 	struct treap *analyses;
+	struct tree *paths;
 	
 	pthread_mutex_t available_mutex;
 	struct treap *available_ids;

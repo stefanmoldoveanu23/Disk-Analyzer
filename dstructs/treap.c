@@ -7,6 +7,9 @@
 struct treap *create_node(const int id, struct analysis *anal)
 {
 	struct treap *ret = (struct treap *)malloc(sizeof(struct treap));
+	if (anal) {
+		printf("IN: %s\n", anal->path);
+	}
 	
 	if (!ret) {
 		return NULL;
@@ -195,8 +198,10 @@ struct treap *extract_treap(struct treap **trp, const int id)
 int remove_treap(struct treap **trp, const int id)
 {
 	struct treap *to_delete = extract_treap(trp, id);
+	printf("a\n");
 	
 	if (to_delete) {
+		printf("b\n");
 		if (to_delete->anal) {
 			free(to_delete->anal->path);
 			free(to_delete->anal);
@@ -220,6 +225,7 @@ void clear_treap(struct treap **trp)
 void save_treap(struct treap **trp, int fd)
 {
 	while (*trp) {
+		printf("OUT: %s\n", (*trp)->anal->path);
 		analysis_write((*trp)->id, (*trp)->anal, fd);
 		remove_treap(trp, (*trp)->id);
 	}

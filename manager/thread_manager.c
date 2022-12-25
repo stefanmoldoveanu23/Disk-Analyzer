@@ -84,6 +84,14 @@ int handle_startup(struct thread_manager *man)
 	}
 	free(string);
 	
+	if (tree_init(&(man->paths))) {
+		perror("Error initializing tree for analyses paths");
+		pthread_mutex_destroy(&(man->analyses_mutex));
+		pthread_mutex_destroy(&(man->available_mutex));
+		close(fd);
+		return -1;
+	}
+	
 	man->analyses = NULL;
 	
 	int id, mx_id = -1;
@@ -93,6 +101,7 @@ int handle_startup(struct thread_manager *man)
 		if (!anal) {
 			perror("Error allocating memory to anal variable");
 			clear_treap(&(man->analyses));
+			tree_clear(&(man->paths));
 			pthread_mutex_destroy(&(man->analyses_mutex));
 			pthread_mutex_destroy(&(man->available_mutex));
 			close(fd);
@@ -103,6 +112,7 @@ int handle_startup(struct thread_manager *man)
 			perror("Error reading analysis from data file");
 			free(anal);
 			clear_treap(&(man->analyses));
+			tree_clear(&(man->paths));
 			pthread_mutex_destroy(&(man->analyses_mutex));
 			pthread_mutex_destroy(&(man->available_mutex));
 			close(fd);
@@ -112,11 +122,36 @@ int handle_startup(struct thread_manager *man)
 			perror("Error inserting analysis in treap");
 			free(anal);
 			clear_treap(&(man->analyses));
+			tree_clear(&(man->paths));
 			pthread_mutex_destroy(&(man->analyses_mutex));
 			pthread_mutex_destroy(&(man->available_mutex));
 			close(fd);
 			return -1;
 		}
+		
+		int *idp = (int *)malloc(sizeof(int));
+		if (!idp) {
+			perror("Error allocating memory to id pointer");
+			clear_treap(&(man->analyses));
+			tree_clear(&(man->paths));
+			pthread_mutex_destroy(&(man->analyses_mutex));
+			pthread_mutex_destroy(&(man->available_mutex));
+			close(fd);
+			return -1;
+		}
+		
+		*idp = id;
+		if (tree_insert(man->paths, anal->path, idp)) {
+			perror("Error inserting analysis in treap");
+			free(idp);
+			clear_treap(&(man->analyses));
+			tree_clear(&(man->paths));
+			pthread_mutex_destroy(&(man->analyses_mutex));
+			pthread_mutex_destroy(&(man->available_mutex));
+			close(fd);
+			return -1;
+		}
+		
 		if (id > mx_id) {
 			mx_id = id;
 		}
@@ -135,6 +170,7 @@ int handle_startup(struct thread_manager *man)
 				perror("Error inserting id in treap");
 				clear_treap(&(man->available_ids));
 				clear_treap(&(man->analyses));
+				tree_clear(&(man->paths));
 				pthread_mutex_destroy(&(man->analyses_mutex));
 				pthread_mutex_destroy(&(man->available_mutex));
 				return -1;
@@ -146,6 +182,7 @@ int handle_startup(struct thread_manager *man)
 		perror("Error creating acceptor socket");
 		clear_treap(&(man->available_ids));
 		clear_treap(&(man->analyses));
+		tree_clear(&(man->paths));
 		pthread_mutex_destroy(&(man->analyses_mutex));
 		pthread_mutex_destroy(&(man->available_mutex));
 		return -1;
@@ -168,6 +205,7 @@ void handle_shutdown(struct thread_manager *man)
 	save_treap(&(man->analyses), fd);
 	close(fd);
 	
+	tree_clear(&(man->paths));
 	clear_treap(&(man->available_ids));
 	
 	pthread_mutex_destroy(&(man->analyses_mutex));
