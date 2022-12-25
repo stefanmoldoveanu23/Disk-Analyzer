@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 		close(man.connection.client_fd);
 	}
 
-	handle_shutdown(&man);
+	requests_shutdown(&man);
 	
 	return 0;
 }
