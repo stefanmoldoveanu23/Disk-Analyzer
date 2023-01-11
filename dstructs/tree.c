@@ -26,6 +26,7 @@ int tree_insert(struct tree *tre, char *path, void *info)
 	char *parse = path;
 
 	while (*(parse += strspn(parse, "/")) != '\0') {
+		printf("Have left: %s.\n", parse);
 		size_t len = strcspn(parse, "/");
 
 		struct tree *nxt = hash_find(tre->hsh, parse);
@@ -64,7 +65,7 @@ int tree_find_prefix(const struct tree *tre, char *path, void **info)
 		if (info) {
 			*info = tre->info;
 		}
-		return 0;
+		return 1;
 	}
 
 	char *parse = path;
@@ -76,7 +77,7 @@ int tree_find_prefix(const struct tree *tre, char *path, void **info)
 			if (info) {
 				*info = NULL;
 			}
-			return 1;
+			return 0;
 		}
 
 		tre = nxt;
@@ -85,7 +86,7 @@ int tree_find_prefix(const struct tree *tre, char *path, void **info)
 				*info = tre->info;
 			}
 			
-			return 0;
+			return 1;
 		}
 		
 		parse += strcspn(parse, "/");

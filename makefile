@@ -36,3 +36,9 @@ analysis.o:
 
 options_handler.o:
 	$(GCC) client/options_handler.h client/options_handler.c $(CFLAGS) -c
+
+clean:
+	rm *.o
+	rm dstructs/*.gch
+	rm manager/*.gch
+	rm client/*.gch

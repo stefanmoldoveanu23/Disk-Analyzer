@@ -14,6 +14,8 @@ struct requests_manager{
 	
 	pthread_mutex_t analyses_mutex;
 	struct treap *analyses;
+	
+	pthread_mutex_t paths_mutex;
 	struct tree *paths;
 	
 	pthread_mutex_t available_mutex;
@@ -24,7 +26,7 @@ struct requests_manager{
 int requests_startup(struct requests_manager *man);
 
 
-int requests_add(struct requests_manager *man, const char *path);
+int requests_add(struct requests_manager *man, struct analysis *anal);
 
 
 int requests_remove(struct requests_manager *man, const int id);

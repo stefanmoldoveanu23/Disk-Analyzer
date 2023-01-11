@@ -87,7 +87,7 @@ int write_string(const char *output, char *dest)
 	}
 	
 	char *start = dest + strlen(dest);
-	return snprintf(start, strlen(dest) + 1, "%s", output);
+	return snprintf(start, strlen(output) + 1, "%s", output);
 }
 
 

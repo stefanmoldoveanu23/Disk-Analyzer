@@ -13,27 +13,27 @@ struct treap{
 	struct treap *chld_right;
 };
 
-struct treap *create_node(const int id, struct analysis *anal);
+struct treap *treap_create_node(const int id, struct analysis *anal);
 
 
-int insert_treap_new(struct treap **trp, const int id, struct analysis *anal);
+int treap_insert_new(struct treap **trp, const int id, struct analysis *anal);
 
 
-void insert_treap_node(struct treap **trp, struct treap *node);
+void treap_insert_node(struct treap **trp, struct treap *node);
 
 
-int find_treap(struct treap *trp, const int id, struct analysis **anal);
+int treap_find(struct treap *trp, const int id, struct analysis **anal);
 
 
-int remove_treap(struct treap **trp, const int id);
+int treap_remove(struct treap **trp, const int id);
 
 
-struct treap *extract_treap(struct treap **trp, const int id);
+struct treap *treap_extract(struct treap **trp, const int id);
 
 
-void clear_treap(struct treap **trp);
+void treap_clear(struct treap **trp);
 
 
-void save_treap(struct treap **trp, int fd);
+void treap_save(struct treap **trp, int fd);
 
 #endif

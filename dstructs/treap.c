@@ -4,7 +4,7 @@
 
 #include "treap.h"
 
-struct treap *create_node(const int id, struct analysis *anal)
+struct treap *treap_create_node(const int id, struct analysis *anal)
 {
 	struct treap *ret = (struct treap *)malloc(sizeof(struct treap));
 	if (anal) {
@@ -53,10 +53,10 @@ void swing_right(struct treap **trp)
 }
 
 
-int insert_treap_new(struct treap **trp, const int id, struct analysis *anal)
+int treap_insert_new(struct treap **trp, const int id, struct analysis *anal)
 {
 	if (!(*trp)) {
-		(*trp) = create_node(id, anal);
+		(*trp) = treap_create_node(id, anal);
 		if (!(*trp)) {
 			return 1;
 		}
@@ -65,11 +65,11 @@ int insert_treap_new(struct treap **trp, const int id, struct analysis *anal)
 	
 	if (id < (*trp)->id) {
 		if ((*trp)->chld_left) {
-			if (insert_treap_new(&((*trp)->chld_left), id, anal)) {
+			if (treap_insert_new(&((*trp)->chld_left), id, anal)) {
 				return 1;
 			}
 		} else {
-			struct treap *new = create_node(id, anal);
+			struct treap *new = treap_create_node(id, anal);
 			if (!new) {
 				return 1;
 			}
@@ -78,11 +78,11 @@ int insert_treap_new(struct treap **trp, const int id, struct analysis *anal)
 		}
 	} else {
 		if ((*trp)->chld_right) {
-			if (insert_treap_new(&((*trp)->chld_right), id, anal)) {
+			if (treap_insert_new(&((*trp)->chld_right), id, anal)) {
 				return 1;
 			}
 		} else {
-			struct treap *new = create_node(id, anal);
+			struct treap *new = treap_create_node(id, anal);
 			if (!new) {
 				return 1;
 			}
@@ -101,7 +101,7 @@ int insert_treap_new(struct treap **trp, const int id, struct analysis *anal)
 }
 
 
-void insert_treap_node(struct treap **trp, struct treap *node)
+void treap_insert_node(struct treap **trp, struct treap *node)
 {
 	if (!(*trp)) {
 		(*trp) = node;
@@ -110,13 +110,13 @@ void insert_treap_node(struct treap **trp, struct treap *node)
 	
 	if (node->id < (*trp)->id) {
 		if ((*trp)->chld_left) {
-			insert_treap_node(&((*trp)->chld_left), node);
+			treap_insert_node(&((*trp)->chld_left), node);
 		} else {
 			(*trp)->chld_left = node;
 		}
 	} else {
 		if ((*trp)->chld_right) {
-			insert_treap_node(&((*trp)->chld_right), node);
+			treap_insert_node(&((*trp)->chld_right), node);
 		} else {
 			(*trp)->chld_right = node;
 		}
@@ -130,7 +130,7 @@ void insert_treap_node(struct treap **trp, struct treap *node)
 }
 
 
-int find_treap(struct treap *trp, const int id, struct analysis **anal) {
+int treap_find(struct treap *trp, const int id, struct analysis **anal) {
 	if (!trp) {
 		if (anal) {
 			*anal = NULL;
@@ -148,14 +148,14 @@ int find_treap(struct treap *trp, const int id, struct analysis **anal) {
 	}
 	
 	if (trp->id < id) {
-		return find_treap(trp->chld_right, id, anal);
+		return treap_find(trp->chld_right, id, anal);
 	}
 	
-	return find_treap(trp->chld_left, id, anal);
+	return treap_find(trp->chld_left, id, anal);
 }
 
 
-struct treap *extract_treap(struct treap **trp, const int id)
+struct treap *treap_extract(struct treap **trp, const int id)
 {
 	if (!(*trp)) {
 		return NULL;
@@ -182,22 +182,23 @@ struct treap *extract_treap(struct treap **trp, const int id)
 		}
 		
 		if (ret) {
+			ret->chld_left = ret->chld_right = NULL;
 			return ret;
 		}
 
 	}
 	
 	if ((*trp)->id < id) {
-		return extract_treap(&((*trp)->chld_right), id);
+		return treap_extract(&((*trp)->chld_right), id);
 	} else {
-		return extract_treap(&((*trp)->chld_left), id);
+		return treap_extract(&((*trp)->chld_left), id);
 	}
 }
 
 
-int remove_treap(struct treap **trp, const int id)
+int treap_remove(struct treap **trp, const int id)
 {
-	struct treap *to_delete = extract_treap(trp, id);
+	struct treap *to_delete = treap_extract(trp, id);
 	printf("a\n");
 	
 	if (to_delete) {
@@ -214,19 +215,19 @@ int remove_treap(struct treap **trp, const int id)
 }
 
 
-void clear_treap(struct treap **trp)
+void treap_clear(struct treap **trp)
 {
 	while (*trp) {
-		remove_treap(trp, (*trp)->id);
+		treap_remove(trp, (*trp)->id);
 	}
 }
 
 
-void save_treap(struct treap **trp, int fd)
+void treap_save(struct treap **trp, int fd)
 {
 	while (*trp) {
 		printf("OUT: %s\n", (*trp)->anal->path);
 		analysis_write((*trp)->id, (*trp)->anal, fd);
-		remove_treap(trp, (*trp)->id);
+		treap_remove(trp, (*trp)->id);
 	}
 }
