@@ -12,6 +12,7 @@
 
 #define ID_MAX 100000
 #define PORT_ACCEPTOR 8080
+#define PORT_REQUEST 8081
 
 #define ANALYSES_PATH "../data/analyses"
 
@@ -23,7 +24,7 @@ int fork_request(struct analysis *anal, int is_startup)
 }
 
 
-int forks_startup(struct treap *trp)
+int initial_forks(struct treap *trp)
 {
 	if (!trp) {
 		return 0;
@@ -33,7 +34,7 @@ int forks_startup(struct treap *trp)
 		return 1;
 	}
 	
-	return forks_startup(trp->chld_left) || forks_startup(trp->chld_right);
+	return initial_forks(trp->chld_left) || initial_forks(trp->chld_right);
 }
 
 
@@ -207,7 +208,7 @@ int requests_startup(struct requests_manager *man)
 		return -1;
 	}
 
-	if (forks_startup(man->analyses)) {
+	if (initial_forks(man->analyses)) {
 		perror("Error creating startup forks.");
 		treap_clear(&(man->available_ids));
 		treap_clear(&(man->analyses));
