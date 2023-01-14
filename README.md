@@ -90,9 +90,9 @@ A signal handler function can only do asynchronous actions, because it halts the
 	- [x] Implement trie data structure for storing paths;
 	- [ ] Implement thread manager:
 		- [x] Implement treap data structure for storing analyses;
-		- [ ] Implement request thread;
+		- [x] Implement request thread(mostly);
 		- [ ] Implement results thread(depending on implementation I might give up on this);
-		- [x] Handle startup(mostly);
+		- [x] Handle startup;
 		- [ ] Handle shutdown(a bit);
 	- [ ] Implement fork manager:
 		- [ ] Implement analysis that handles interruption;
