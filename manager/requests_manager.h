@@ -9,10 +9,11 @@
 
 
 struct requests_manager{
-	int analysis_cnt;
+	pthread_mutex_t socket_mutex;
 	struct socket_connection connection;
 	
 	pthread_mutex_t analyses_mutex;
+	int analysis_cnt;
 	struct treap *analyses;
 	
 	pthread_mutex_t paths_mutex;

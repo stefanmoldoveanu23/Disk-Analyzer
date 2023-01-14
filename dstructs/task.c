@@ -1,9 +1,9 @@
 #include "task.h"
 
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include "unistd.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 int appendInt(const int src, char *dest)
 {
@@ -155,6 +155,7 @@ int readTask(const int fd, struct task *dest)
 			if (readString(fd, &(dest->path))) {
 				return -1;
 			}
+			
 			break;
 		}
 		default: {

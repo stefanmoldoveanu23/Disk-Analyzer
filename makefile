@@ -1,8 +1,9 @@
 GCC = gcc
 CFLAGS = -Wall -ggdb3
+ADDFLAGS = -lpthread
 
 manager: manager/manager.c requests_manager.o create_socket.o task.o treap.o tree.o hash.o analysis.o
-	$(GCC) manager/manager.c $(CFLAGS) -o manager/manager requests_manager.o create_socket.o task.o treap.o tree.o hash.o analysis.o
+	$(GCC) manager/manager.c $(CFLAGS) $(ADDFLAGS) -o manager/manager requests_manager.o create_socket.o task.o treap.o tree.o hash.o analysis.o
 	rm *.o
 	rm dstructs/*.gch
 	rm manager/*.gch

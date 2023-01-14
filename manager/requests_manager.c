@@ -69,12 +69,21 @@ int requests_startup(struct requests_manager *man)
 		return -1;
 	}
 	
+	if (pthread_mutex_init(&(man->socket_mutex), NULL)) {
+		perror("Error initializing socket mutex.");
+		close(fd);
+		pthread_mutex_destroy(&(man->analyses_mutex));
+		pthread_mutex_destroy(&(man->available_mutex));
+		pthread_mutex_destroy(&(man->paths_mutex));
+	}
+	
 	char *string = (char *)malloc(11);
 	if (!string) {
 		perror("Error allocating memory to string in order to read amount of saved analyses");
 		pthread_mutex_destroy(&(man->analyses_mutex));
 		pthread_mutex_destroy(&(man->available_mutex));
 		pthread_mutex_destroy(&(man->paths_mutex));
+		pthread_mutex_destroy(&(man->socket_mutex));
 		close(fd);
 		return -1;
 	}
@@ -87,6 +96,7 @@ int requests_startup(struct requests_manager *man)
 		pthread_mutex_destroy(&(man->analyses_mutex));
 		pthread_mutex_destroy(&(man->available_mutex));
 		pthread_mutex_destroy(&(man->paths_mutex));
+		pthread_mutex_destroy(&(man->socket_mutex));
 		close(fd);
 		return -1;
 	} else if (!total_read) {
@@ -101,6 +111,7 @@ int requests_startup(struct requests_manager *man)
 		pthread_mutex_destroy(&(man->analyses_mutex));
 		pthread_mutex_destroy(&(man->available_mutex));
 		pthread_mutex_destroy(&(man->paths_mutex));
+		pthread_mutex_destroy(&(man->socket_mutex));
 		close(fd);
 		return -1;
 	}
@@ -118,6 +129,7 @@ int requests_startup(struct requests_manager *man)
 			pthread_mutex_destroy(&(man->analyses_mutex));
 			pthread_mutex_destroy(&(man->available_mutex));
 			pthread_mutex_destroy(&(man->paths_mutex));
+			pthread_mutex_destroy(&(man->socket_mutex));
 			close(fd);
 			return -1;
 		}
@@ -130,6 +142,7 @@ int requests_startup(struct requests_manager *man)
 			pthread_mutex_destroy(&(man->analyses_mutex));
 			pthread_mutex_destroy(&(man->available_mutex));
 			pthread_mutex_destroy(&(man->paths_mutex));
+			pthread_mutex_destroy(&(man->socket_mutex));
 			close(fd);
 			return -1;
 		}
@@ -141,6 +154,7 @@ int requests_startup(struct requests_manager *man)
 			pthread_mutex_destroy(&(man->analyses_mutex));
 			pthread_mutex_destroy(&(man->available_mutex));
 			pthread_mutex_destroy(&(man->paths_mutex));
+			pthread_mutex_destroy(&(man->socket_mutex));
 			close(fd);
 			return -1;
 		}
@@ -153,6 +167,7 @@ int requests_startup(struct requests_manager *man)
 			pthread_mutex_destroy(&(man->analyses_mutex));
 			pthread_mutex_destroy(&(man->available_mutex));
 			pthread_mutex_destroy(&(man->paths_mutex));
+			pthread_mutex_destroy(&(man->socket_mutex));
 			close(fd);
 			return -1;
 		}
@@ -166,6 +181,7 @@ int requests_startup(struct requests_manager *man)
 			pthread_mutex_destroy(&(man->analyses_mutex));
 			pthread_mutex_destroy(&(man->available_mutex));
 			pthread_mutex_destroy(&(man->paths_mutex));
+			pthread_mutex_destroy(&(man->socket_mutex));
 			close(fd);
 			return -1;
 		}
@@ -192,6 +208,7 @@ int requests_startup(struct requests_manager *man)
 				pthread_mutex_destroy(&(man->analyses_mutex));
 				pthread_mutex_destroy(&(man->available_mutex));
 				pthread_mutex_destroy(&(man->paths_mutex));
+				pthread_mutex_destroy(&(man->socket_mutex));
 				return -1;
 			}
 		}
@@ -205,6 +222,7 @@ int requests_startup(struct requests_manager *man)
 		pthread_mutex_destroy(&(man->analyses_mutex));
 		pthread_mutex_destroy(&(man->available_mutex));
 		pthread_mutex_destroy(&(man->paths_mutex));
+		pthread_mutex_destroy(&(man->socket_mutex));
 		return -1;
 	}
 
@@ -216,6 +234,7 @@ int requests_startup(struct requests_manager *man)
 		pthread_mutex_destroy(&(man->analyses_mutex));
 		pthread_mutex_destroy(&(man->available_mutex));
 		pthread_mutex_destroy(&(man->paths_mutex));
+		pthread_mutex_destroy(&(man->socket_mutex));
 		shutdown(man->connection.server_fd, SHUT_RDWR);
 	}
 
@@ -263,17 +282,8 @@ void return_id(struct treap **trp, struct treap *node) {
 
 int requests_add(struct requests_manager *man, struct analysis *anal)
 {
-	char *fullpath = realpath(anal->path, NULL);
-	if (fullpath == NULL) {
-		perror(NULL);
-		return 1;
-	}
-	
-	free(anal->path);
-	anal->path = fullpath;
-	
 	struct stat sb;
-	if (stat(fullpath, &sb) || S_ISDIR(sb.st_mode) == 0) {
+	if (stat(anal->path, &sb) || S_ISDIR(sb.st_mode) == 0) {
 		perror("Path is not a directory.");
 		return 1;
 	}
@@ -347,6 +357,7 @@ void requests_shutdown(struct requests_manager *man)
 	pthread_mutex_destroy(&(man->analyses_mutex));
 	pthread_mutex_destroy(&(man->available_mutex));
 	pthread_mutex_destroy(&(man->paths_mutex));
+	pthread_mutex_destroy(&(man->socket_mutex));
 
 	shutdown(man->connection.server_fd, SHUT_RDWR);
 }

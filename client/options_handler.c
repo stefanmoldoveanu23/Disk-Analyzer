@@ -1,7 +1,9 @@
 #include "options_handler.h"
-#include "errno.h"
-#include "stdlib.h"
-#include "stdio.h"
+
+#include <errno.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 const char *options = "a:p:S:R:r:i:l";
 const struct option long_options[] = {
@@ -31,7 +33,7 @@ int get_task(const int argc, char **argv, struct task *tsk)
 		}
 		case 'a': {
 			tsk->cnt = 1;
-			tsk->path = optarg;
+			tsk->path = strdup(optarg);
 			
 			break;
 		}
@@ -72,6 +74,7 @@ int get_task(const int argc, char **argv, struct task *tsk)
 	
 	int opt_2 = getopt_long(argc, argv, options, long_options, NULL);
 	if (errno) {
+		printf("Hiiii");
 		return -1;
 	}
 	
@@ -111,6 +114,17 @@ int get_task(const int argc, char **argv, struct task *tsk)
 	if (optind < argc) {
 		printf("Too much input.\n");
 		return -1;
+	}
+			
+	if (tsk->cnt == 1) {
+		char *fullPath = realpath(tsk->path, NULL);
+		free(tsk->path);
+		
+		if (!fullPath) {
+			perror("Invalid path.");
+			return -1;
+		}
+		tsk->path = fullPath;
 	}
 	
 	return 0;
