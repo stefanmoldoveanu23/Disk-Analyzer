@@ -102,6 +102,7 @@ int tree_remove(struct tree *tre, const char *path)
 	if (*path == '\0') {
 		if (tre->info) {
 			free(tre->info);
+			tre->info = NULL;
 			return 0;
 		}
 		
@@ -130,6 +131,7 @@ void tree_clear(struct tree **tre)
 {
 	if ((*tre)->info) {
 		free((*tre)->info);
+		(*tre)->info = NULL;
 	}
 	
 	hash_clear(&((*tre)->hsh));

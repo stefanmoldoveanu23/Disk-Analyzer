@@ -5,8 +5,10 @@
 
 #include "../dstructs/task.h"
 #include "requests_manager.h"
+#include "forks_manager.h"
 
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <signal.h>
@@ -15,6 +17,10 @@
 #define PORT 8080
 
 volatile sig_atomic_t done = 0;
+
+void sig_handler(int signum) {
+	done = 1;
+}
 
 int cnt_threads = 0;
 pthread_mutex_t cnt_mutex;
@@ -25,11 +31,19 @@ void decrease_cnt();
 void do_requests_manager();
 void *request_thread(void *v);
 
-void do_forks_manager();
+void do_forks_manager(struct forks_manager *man);
 
 int main()
 {
+	signal(SIGTERM, sig_handler);
 	daemon(1, 1);
+	
+	
+	struct forks_manager fman;
+	if (forks_startup(&fman)) {
+		perror("Error starting fork manager.");
+		return errno;
+	}
 	
 	pid_t pid = fork();
 	if (pid == -1) {
@@ -37,10 +51,12 @@ int main()
 		return errno;
 	}
 	
+	
 	if (pid) {
+		tree_clear(&(fman.tre));
 		do_requests_manager();
 	} else {
-		do_forks_manager();
+		do_forks_manager(&fman);
 	}
 	
 	return 0;
@@ -63,16 +79,24 @@ void do_requests_manager()
 	}
 	
 	int addlen = sizeof(man.connection.address);
-	for (int i = 0; i < reqs; ++i) {
+	
+	while (!done) {
 		pthread_mutex_lock(&(man.socket_mutex));
 		man.connection.client_fd = accept(man.connection.server_fd, (struct sockaddr *)(&(man.connection.address)), (socklen_t *)(&addlen));
 		if (man.connection.client_fd < 0) {
+			pthread_mutex_unlock(&(man.socket_mutex));
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				continue;
+			}
+			
 			perror("Error when accepting connection.");
 			break;
 		}
 		
+		
 		pthread_t thr;
 		while (pthread_create(&thr, NULL, request_thread, (void*)(&man)));
+		increase_cnt();
 		
 	}
 	
@@ -84,6 +108,8 @@ void do_requests_manager()
 		}
 		pthread_mutex_unlock(&cnt_mutex);
 	}
+	
+	wait(NULL);
 
 	requests_shutdown(&man);
 	pthread_mutex_destroy(&cnt_mutex);
@@ -93,7 +119,6 @@ void do_requests_manager()
 
 void *request_thread(void *v)
 {
-	increase_cnt();
 	
 	struct requests_manager *man = (struct requests_manager *)(v);
 	int client_fd = man->connection.client_fd;
@@ -159,7 +184,23 @@ void decrease_cnt()
 	pthread_mutex_unlock(&cnt_mutex);
 }
 
-void do_forks_manager()
+void do_forks_manager(struct forks_manager *man)
 {
+	int addlen = sizeof(man->connection.address);
+	while (!done) {
+		man->connection.client_fd = accept(man->connection.server_fd, (struct sockaddr *)(&(man->connection.address)), (socklen_t *)(&addlen));
+		if (man->connection.client_fd < 0) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				continue;
+			}
+			
+			perror("Error when accepting connection.");
+			break;
+		}
+
+		forks_add(man);
+	}
 	
+	forks_shutdown(man);
+
 }

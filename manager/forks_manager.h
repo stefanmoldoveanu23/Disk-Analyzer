@@ -1,9 +1,11 @@
 #ifndef FORKS_MANAGER_H
 #define FORKS_MANAGER_H
 
-#include "create_socket.h";
-#include "tree.h";
+#include <stdio.h>
+#include <errno.h>
 
+#include "../dstructs/create_socket.h"
+#include "../dstructs/tree.h"
 
 struct forks_manager{
 	struct socket_connection connection;
@@ -23,5 +25,7 @@ int forks_solve(struct forks_manager *man);
 int forks_write(struct forks_manager *man);
 
 int forks_done(struct forks_manager *man);
+
+void forks_shutdown(struct forks_manager *man);
 
 #endif

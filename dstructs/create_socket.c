@@ -2,6 +2,7 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
 
 int create_socket_acceptor(struct socket_connection *connection, const int port)
 {
@@ -25,7 +26,14 @@ int create_socket_acceptor(struct socket_connection *connection, const int port)
 		return 1;
 	}
 	
+	int newMask = fcntl(connection->server_fd, F_GETFL, 0) | O_NONBLOCK;
+	if (fcntl(connection->server_fd, F_SETFL, newMask)) {
+		close(connection->server_fd);
+		return 1;
+	}
+	
 	if (listen(connection->server_fd, 10000) < 0) {
+		printf("Problem!!!");
 		close(connection->server_fd);
 		return 1;
 	}

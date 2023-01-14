@@ -19,7 +19,52 @@
 
 int fork_request(struct analysis *anal, int is_startup)
 {
-	/* COMPLETE AFTER IMPLEMENTING FORK MANAGER */
+	char *request = (char*)malloc(1 + 10 + strlen(anal->path) + 5);
+	memset(request, '\0', 1 + 10 + strlen(anal->path) + 5);
+	
+	if (snprintf(request, 1 + 10 + strlen(anal->path) + 4, "%c%010d%s", is_startup + '0', (int)strlen(anal->path), anal->path) < 0) {
+		return 1;
+	}
+	
+	printf("%s\n", request);
+	
+	struct socket_connection connection;
+	if (create_socket_connector(&connection, PORT_REQUEST)) {
+		perror(NULL);
+		free(request);
+		
+		return 1;
+	}
+	
+	connection.server_fd = connect(connection.client_fd, (struct sockaddr*)(&connection.address), sizeof(connection.address));
+	if (connection.server_fd < 0) {
+		perror(NULL);
+		free(request);
+		shutdown(connection.client_fd, SHUT_RDWR);
+		return 1;
+	}
+	
+	/*int pos = 0, total = strlen(request);
+	while (pos != total) {
+		int sent = send(connection.client_fd, request + pos, total - pos, 0);
+		
+		if (sent < 0) {
+			perror(NULL);
+			free(request);
+			close(connection.server_fd);
+			shutdown(connection.client_fd, SHUT_RDWR);
+			
+			return errno;
+		}
+		
+		pos += sent;
+	}*/
+	
+	free(request);
+	
+	close(connection.server_fd);
+	shutdown(connection.client_fd, SHUT_RDWR);
+	
 	return 0;
 }
 
@@ -308,33 +353,51 @@ int requests_add(struct requests_manager *man, struct analysis *anal)
 	int *id = (int *)malloc(sizeof(int));
 	if (!id) {
 		perror("Error allocating memory.");
+		
+		pthread_mutex_lock(&(man->available_mutex));
 		return_id(&(man->available_ids), new_id);
+		pthread_mutex_unlock(&(man->available_mutex));
 		return 1;
 	}
+	*id = new_id->id;
 	
 	pthread_mutex_lock(&(man->paths_mutex));
 	if (tree_insert(man->paths, anal->path, (void *)id)) {
 		perror("Could not insert path in tree when creating new analysis.");
 		free(id);
+		
+		pthread_mutex_lock(&(man->available_mutex));
 		return_id(&(man->available_ids), new_id);
+		pthread_mutex_unlock(&(man->available_mutex));
 		return 1;
 	}
 	pthread_mutex_unlock(&(man->paths_mutex));
 	
 	pthread_mutex_lock(&(man->analyses_mutex));
+	anal->last_start = time(NULL);
 	treap_insert_node(&(man->analyses), new_id);
 	pthread_mutex_unlock(&(man->analyses_mutex));
 	
 	if (fork_request(anal, 0)) {
 		perror("Could not communicate with forking manager.");
-		treap_remove(&(man->analyses), new_id->id);
+		
+		pthread_mutex_lock(&(man->analyses_mutex));
+		struct treap *trp = treap_extract(&(man->analyses), new_id->id);
+		pthread_mutex_unlock(&(man->analyses_mutex));
+		
+		pthread_mutex_lock(&(man->paths_mutex));
 		tree_remove(man->paths, anal->path);
-		return_id(&(man->available_ids), new_id);
+		pthread_mutex_unlock(&(man->paths_mutex));
+		
+		pthread_mutex_lock(&(man->available_mutex));
+		return_id(&(man->available_ids), trp);
+		pthread_mutex_unlock(&(man->available_mutex));
 		return 1;
 	}
 	
+	pthread_mutex_lock(&(man->analyses_mutex));
 	++man->analysis_cnt;
-	anal->last_start = time(NULL);
+	pthread_mutex_unlock(&(man->analyses_mutex));
 	
 	return 0;
 }

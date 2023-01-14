@@ -5,9 +5,9 @@ Description= Disk Analyzer manager startup and shutdown helper
 
 [Service]
 ExecStart=/home/characterme/Disk-Analyzer/setup/onstart
-KillMode=process
-SendSIGKILL=no
+KillMode=control-group
 StandardOutput=journal+console
+TimeoutStopSec=10
 
 [Install]
 WantedBy=multi-user.target

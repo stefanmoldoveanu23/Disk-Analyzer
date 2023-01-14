@@ -3,6 +3,7 @@
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 
 struct socket_connection{
 	int client_fd;
