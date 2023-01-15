@@ -26,7 +26,6 @@ int tree_insert(struct tree *tre, char *path, void *info)
 	char *parse = path;
 
 	while (*(parse += strspn(parse, "/")) != '\0') {
-		printf("Have left: %s.\n", parse);
 		size_t len = strcspn(parse, "/");
 
 		struct tree *nxt = hash_find(tre->hsh, parse);

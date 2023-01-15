@@ -26,8 +26,6 @@ int fork_request(struct analysis *anal, int is_startup)
 		return 1;
 	}
 	
-	printf("%s\n", request);
-	
 	struct socket_connection connection;
 	if (create_socket_connector(&connection, PORT_REQUEST)) {
 		perror(NULL);

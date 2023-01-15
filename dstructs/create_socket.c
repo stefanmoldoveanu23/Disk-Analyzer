@@ -33,7 +33,6 @@ int create_socket_acceptor(struct socket_connection *connection, const int port)
 	}
 	
 	if (listen(connection->server_fd, 10000) < 0) {
-		printf("Problem!!!");
 		close(connection->server_fd);
 		return 1;
 	}
