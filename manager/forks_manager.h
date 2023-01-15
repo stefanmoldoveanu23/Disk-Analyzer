@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <signal.h>
 
 #include "../dstructs/create_socket.h"
 #include "../dstructs/tree.h"
@@ -16,7 +17,7 @@ struct forks_manager{
 
 int forks_startup(struct forks_manager *man);
 
-int forks_add(struct forks_manager *man);
+int forks_add(struct forks_manager *man, volatile sig_atomic_t *done);
 
 int forks_read_path(struct forks_manager *man);
 

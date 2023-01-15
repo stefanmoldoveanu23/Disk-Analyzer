@@ -1,5 +1,7 @@
 #include "forks_manager.h"
 
+#include <stdlib.h>
+
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -22,7 +24,7 @@ int forks_startup(struct forks_manager *man)
 	return 0;
 }
 
-int forks_add(struct forks_manager *man)
+int forks_add(struct forks_manager *man, volatile sig_atomic_t *done)
 {
 	pid_t pid = fork();
 	if (pid == -1) {
@@ -31,13 +33,15 @@ int forks_add(struct forks_manager *man)
 	
 	if (pid) {
 		close(man->connection.client_fd);
-		return 0;
+		return 1;
 	}
 	
-	forks_shutdown(man);
+	while (!(*done));
 	
 	close(man->connection.client_fd);
+	tree_clear(&(man->tre));
 	
+	*done = 1;
 	return 0;
 }
 

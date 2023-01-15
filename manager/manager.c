@@ -20,6 +20,7 @@ volatile sig_atomic_t done = 0;
 
 void sig_handler(int signum) {
 	done = 1;
+	signal(SIGTERM, SIG_IGN);
 }
 
 int cnt_threads = 0;
@@ -35,9 +36,8 @@ void do_forks_manager(struct forks_manager *man);
 
 int main()
 {
-	signal(SIGTERM, sig_handler);
 	daemon(1, 1);
-	
+	signal(SIGTERM, sig_handler);
 	
 	struct forks_manager fman;
 	if (forks_startup(&fman)) {
@@ -55,6 +55,7 @@ int main()
 	if (pid) {
 		tree_clear(&(fman.tre));
 		do_requests_manager();
+		kill(pid, SIGTERM);
 	} else {
 		do_forks_manager(&fman);
 	}
@@ -198,9 +199,16 @@ void do_forks_manager(struct forks_manager *man)
 			break;
 		}
 
-		forks_add(man);
+		int ret = forks_add(man, &done);
+		if (ret < 0) {
+			perror("Error adding new fork.");
+			return;
+		} else if (!ret) {
+			return;
+		}
 	}
 	
+	kill(0, SIGTERM);
 	forks_shutdown(man);
 
 }
