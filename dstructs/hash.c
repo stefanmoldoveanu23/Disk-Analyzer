@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <unistd.h>
+
 
 int get_key(const char *path)
 {
@@ -117,6 +119,23 @@ void list_clear(struct list **lst)
 }
 
 
+void list_save(struct list **lst, int fd)
+{
+	while (*lst) {
+		struct list *to_clear = *lst;
+		*lst = (*lst)->next;
+		
+		write(fd, "+", 1);
+		char vessel[11 + strlen(to_clear->path)];
+		snprintf(vessel, 11 + strlen(to_clear->path), "%010d%s", (int)strlen(to_clear->path), to_clear->path);
+		
+		tree_clear(&(to_clear->node));
+		free(to_clear->path);
+		free(to_clear);
+	}
+}
+
+
 struct tree *hash_insert(struct hash *hsh, char *path)
 {
 	int key = get_key(path);
@@ -157,11 +176,19 @@ int hash_remove(struct hash *hsh, const char *path)
 
 void hash_clear(struct hash *hsh) {
 	for (int i = 0; i < HASH_MOD; ++i) {
-		if (hsh->children[i]) {
-		}
 		list_clear(&(hsh->children[i]));
 	}
 	
 	hsh->size = 0;
 }
 
+
+void hash_save(struct hash *hsh, int fd)
+{
+	for (int i = 0; i < HASH_MOD; ++i) {
+		list_save(&(hsh->children[i]), fd);
+	}
+	
+	hsh->size = 0;
+	write(fd, "-", 1);
+}

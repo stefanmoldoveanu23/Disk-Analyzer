@@ -37,6 +37,9 @@ int list_remove(struct list **lst, const char *path);
 void list_clear(struct list **lst);
 
 
+void list_save(struct list **lst, int fd);
+
+
 struct tree *hash_insert(struct hash *hsh, char *path);
 
 
@@ -47,6 +50,9 @@ int hash_remove(struct hash *hsh, const char *path);
 
 
 void hash_clear(struct hash *hsh);
+
+
+void hash_save(struct hash *hsh, int fd);
 
 
 #endif

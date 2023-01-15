@@ -17,12 +17,12 @@
 #define ANALYSES_PATH "../data/analyses"
 
 
-int fork_request(struct analysis *anal, int is_startup)
+int fork_request(int id, struct analysis *anal)
 {
-	char *request = (char*)malloc(1 + 10 + strlen(anal->path) + 5);
-	memset(request, '\0', 1 + 10 + strlen(anal->path) + 5);
+	char *request = (char*)malloc(10 + 10 + strlen(anal->path) + 5);
+	memset(request, '\0', 10 + 10 + strlen(anal->path) + 5);
 	
-	if (snprintf(request, 1 + 10 + strlen(anal->path) + 4, "%c%010d%s", is_startup + '0', (int)strlen(anal->path), anal->path) < 0) {
+	if (snprintf(request, 10 + 10 + strlen(anal->path) + 4, "%010d%010d%s", id, (int)strlen(anal->path), anal->path) < 0) {
 		return 1;
 	}
 	
@@ -42,7 +42,7 @@ int fork_request(struct analysis *anal, int is_startup)
 		return 1;
 	}
 	
-	/*int pos = 0, total = strlen(request);
+	int pos = 0, total = strlen(request);
 	while (pos != total) {
 		int sent = send(connection.client_fd, request + pos, total - pos, 0);
 		
@@ -56,7 +56,7 @@ int fork_request(struct analysis *anal, int is_startup)
 		}
 		
 		pos += sent;
-	}*/
+	}
 	
 	free(request);
 	
@@ -73,7 +73,7 @@ int initial_forks(struct treap *trp)
 		return 0;
 	}
 	
-	if (fork_request(trp->anal, 1)) {
+	if (fork_request(trp->id, trp->anal)) {
 		return 1;
 	}
 	
@@ -376,7 +376,7 @@ int requests_add(struct requests_manager *man, struct analysis *anal)
 	treap_insert_node(&(man->analyses), new_id);
 	pthread_mutex_unlock(&(man->analyses_mutex));
 	
-	if (fork_request(anal, 0)) {
+	if (fork_request(*id, anal)) {
 		perror("Could not communicate with forking manager.");
 		
 		pthread_mutex_lock(&(man->analyses_mutex));
@@ -403,8 +403,7 @@ int requests_add(struct requests_manager *man, struct analysis *anal)
 
 void requests_shutdown(struct requests_manager *man)
 {
-	/* IT IS GOING TO BE MORE COMPLEX, BUT I NEED TO IMPLEMENT THE FORK MANAGER FIRST */
-	int fd = open(ANALYSES_PATH, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+	int fd = open(ANALYSES_PATH, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
 	char cnt[15] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 	snprintf(cnt, 11, "%.010d", man->analysis_cnt);
 	write(fd, cnt, 10);

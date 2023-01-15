@@ -17,8 +17,17 @@
 #define PORT 8080
 
 volatile sig_atomic_t done = 0;
+pid_t pid;
 
-void sig_handler(int signum) {
+void reqman_handler(int signum) {
+	done = 1;
+	signal(SIGTERM, SIG_IGN);
+}
+
+void forkman_handler(int signum) {
+	kill(pid, SIGTERM);
+	waitpid(pid, NULL, 0);
+	
 	done = 1;
 	signal(SIGTERM, SIG_IGN);
 }
@@ -37,7 +46,6 @@ void do_forks_manager(struct forks_manager *man);
 int main()
 {
 	daemon(1, 1);
-	signal(SIGTERM, sig_handler);
 	
 	struct forks_manager fman;
 	if (forks_startup(&fman)) {
@@ -45,7 +53,7 @@ int main()
 		return errno;
 	}
 	
-	pid_t pid = fork();
+	pid = fork();
 	if (pid == -1) {
 		perror("Error forking at startup.");
 		return errno;
@@ -53,11 +61,12 @@ int main()
 	
 	
 	if (pid) {
+		signal(SIGTERM, forkman_handler);
+		do_forks_manager(&fman);
+	} else {
+		signal(SIGTERM, reqman_handler);
 		tree_clear(&(fman.tre));
 		do_requests_manager();
-		kill(pid, SIGTERM);
-	} else {
-		do_forks_manager(&fman);
 	}
 	
 	return 0;
@@ -65,8 +74,6 @@ int main()
 
 void do_requests_manager()
 {
-	int reqs = 2;
-	
 	if (pthread_mutex_init(&cnt_mutex, NULL)) {
 		perror("Error when starting thread counter mutex.");
 		exit(errno);
@@ -114,7 +121,6 @@ void do_requests_manager()
 
 	requests_shutdown(&man);
 	pthread_mutex_destroy(&cnt_mutex);
-	
 	pthread_exit(NULL);
 }
 
@@ -199,7 +205,7 @@ void do_forks_manager(struct forks_manager *man)
 			break;
 		}
 
-		int ret = forks_add(man, &done);
+		int ret = forks_add(man, &done, reqman_handler);
 		if (ret < 0) {
 			perror("Error adding new fork.");
 			return;

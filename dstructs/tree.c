@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 
 int tree_init(struct tree **tre)
@@ -138,3 +139,36 @@ void tree_clear(struct tree **tre)
 }
 
 
+void tree_save(struct tree **tre, int fd) {
+	state_write((struct state *)((*tre)->info), fd);
+	
+	if ((*tre)->info) {
+		free((*tre)->info);
+		(*tre)->info = NULL;
+	}
+	
+	hash_save(&((*tre)->hsh), fd);
+	free(*tre);
+}
+
+
+void state_write(struct state *st, int fd)
+{
+	if (!st) {
+		write(fd, "0", 1);
+	} else {
+		write(fd, "1", 1);
+		
+		if (st->done) {
+			write(fd, "1", 1);
+		} else {
+			write(fd, "0", 1);
+		}
+		
+		char vessel[11];
+		vessel[10] = '\0';
+		
+		snprintf(vessel, 11, "%010d", st->size);
+		write(fd, vessel, 10);
+	}
+}
