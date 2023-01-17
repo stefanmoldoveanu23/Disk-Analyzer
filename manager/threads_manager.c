@@ -1,4 +1,4 @@
-#include "requests_manager.h"
+#include "threads_manager.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,8 +11,9 @@
 #include <time.h>
 
 #define ID_MAX 100000
-#define PORT_ACCEPTOR 8080
+#define PORT_ACCEPTOR_REQUESTS 8080
 #define PORT_REQUEST 8081
+#define PORT_ACCEPTOR_RESPONSES 8082
 
 #define ANALYSES_PATH "../data/analyses"
 
@@ -102,7 +103,7 @@ int initial_forks(struct treap *trp)
 }
 
 
-int requests_startup(struct requests_manager *man)
+int threads_startup(struct threads_manager *man)
 {
 	srand(time(NULL));
 	
@@ -278,7 +279,7 @@ int requests_startup(struct requests_manager *man)
 		}
 	}
 	
-	if (create_socket_acceptor(&(man->connection), PORT_ACCEPTOR)) {
+	if (create_socket_acceptor(&(man->requests_connection), PORT_ACCEPTOR_REQUESTS)) {
 		perror("Error creating acceptor socket");
 		treap_clear(&(man->available_ids));
 		treap_clear(&(man->analyses));
@@ -287,6 +288,19 @@ int requests_startup(struct requests_manager *man)
 		pthread_mutex_destroy(&(man->available_mutex));
 		pthread_mutex_destroy(&(man->paths_mutex));
 		pthread_mutex_destroy(&(man->socket_mutex));
+		return -1;
+	}
+	
+	if (create_socket_acceptor(&(man->responses_connection), PORT_ACCEPTOR_RESPONSES)) {
+		perror("Error creating acceptor socket");
+		treap_clear(&(man->available_ids));
+		treap_clear(&(man->analyses));
+		tree_clear(&(man->paths));
+		pthread_mutex_destroy(&(man->analyses_mutex));
+		pthread_mutex_destroy(&(man->available_mutex));
+		pthread_mutex_destroy(&(man->paths_mutex));
+		pthread_mutex_destroy(&(man->socket_mutex));
+		shutdown(man->requests_connection.server_fd, SHUT_RDWR);
 		return -1;
 	}
 
@@ -299,7 +313,9 @@ int requests_startup(struct requests_manager *man)
 		pthread_mutex_destroy(&(man->available_mutex));
 		pthread_mutex_destroy(&(man->paths_mutex));
 		pthread_mutex_destroy(&(man->socket_mutex));
-		shutdown(man->connection.server_fd, SHUT_RDWR);
+		shutdown(man->requests_connection.server_fd, SHUT_RDWR);
+		shutdown(man->responses_connection.server_fd, SHUT_RDWR);
+		return -1;
 	}
 
 	return 0;
@@ -344,7 +360,7 @@ void return_id(struct treap **trp, struct treap *node) {
 }
 
 
-int requests_add(struct requests_manager *man, struct analysis *anal)
+int threads_add(struct threads_manager *man, struct analysis *anal)
 {
 	struct stat sb;
 	if (stat(anal->path, &sb) || S_ISDIR(sb.st_mode) == 0) {
@@ -422,7 +438,7 @@ int requests_add(struct requests_manager *man, struct analysis *anal)
 }
 
 
-void requests_shutdown(struct requests_manager *man)
+void threads_shutdown(struct threads_manager *man)
 {
 	int fd = open(ANALYSES_PATH, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
 	char cnt[15] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
@@ -440,5 +456,6 @@ void requests_shutdown(struct requests_manager *man)
 	pthread_mutex_destroy(&(man->paths_mutex));
 	pthread_mutex_destroy(&(man->socket_mutex));
 
-	shutdown(man->connection.server_fd, SHUT_RDWR);
+	shutdown(man->requests_connection.server_fd, SHUT_RDWR);
+	shutdown(man->responses_connection.server_fd, SHUT_RDWR);
 }

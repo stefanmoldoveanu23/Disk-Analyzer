@@ -4,7 +4,7 @@
 #include <time.h>
 
 #include "../dstructs/task.h"
-#include "threads_manager.h"
+#include "requests_manager.h"
 #include "forks_manager.h"
 
 #include <sys/types.h>
@@ -16,34 +16,27 @@
 
 #define PORT 8080
 
-volatile sig_atomic_t cnt_forks = 0;
-volatile sig_atomic_t cnt_threads = 0;
+volatile sig_atomic_t cnt_children = 0;
 
 volatile sig_atomic_t done = 0;
 pid_t pid;
 
 void child_done_handler(int signum) {
 	wait(NULL);
-	--cnt_forks;
-}
-
-void thread_start_handler(int signum) {
-	++cnt_threads;
-}
-
-void thread_done_handler(int signum) {
-	--cnt_threads;
+	--cnt_children;
 }
 
 void resman_handler(int signum) {
-	++done;
-	if (done >= 3) {
-		signal(SIGTERM, SIG_IGN);
-	}
+	signal(SIGTERM, SIG_IGN);
+	done = 2;
+}
+
+void ignore_handler(int signum) {
+	signal(SIGTERM, resman_handler);
 }
 
 void reqman_handler(int signum) {
-	signal(SIGTERM, resman_handler);
+	signal(SIGTERM, ignore_handler);
 	done = 1;
 }
 
@@ -61,6 +54,12 @@ void forkchild_handler(int signum) {
 	signal(SIGTERM, SIG_IGN);
 	done = 1;
 }
+
+int cnt_threads = 0;
+pthread_mutex_t cnt_mutex;
+
+void increase_cnt();
+void decrease_cnt();
 
 void do_threads_manager();
 
@@ -89,14 +88,10 @@ int main()
 	
 	
 	if (pid) {
-		signal(SIGTERM, forkman_handler1);
+		signal(SIGTERM, forkman_handler);
 		do_forks_manager(&fman);
 	} else {
 		signal(SIGTERM, reqman_handler);
-		
-		signal(SIGUSR1, thread_start_handler);
-		signal(SIGUSR2, thread_done_handler);
-		
 		tree_clear(&(fman.tre));
 		do_threads_manager();
 	}
@@ -106,71 +101,68 @@ int main()
 
 void do_threads_manager()
 {
-	
-	struct threads_manager man;
-	if (threads_startup(&man)) {
-		perror("Error when starting up thread manager");
+	if (pthread_mutex_init(&cnt_mutex, NULL)) {
+		perror("Error when starting thread counter mutex.");
 		exit(errno);
 	}
 	
-	pthread_t requests_t, responses_t;
+	struct threads_manager man;
+	if (requests_startup(&man)) {
+		perror("Error when starting up thread manager");
+		pthread_mutex_destroy(&cnt_mutex);
+		exit(errno);
+	}
 	
-	while (pthread_create(&responses_t, NULL, do_responses_manager, &man));
-	while (pthread_create(&requests_t, NULL, do_requests_manager, &man));
-	
-	
-	pthread_join(requests_t, NULL);
-	pthread_join(responses_t, NULL);
-	
-	threads_shutdown(&man);
-}
-
-void *do_requests_manager(void *v)
-{
-	struct threads_manager *man = (struct threads_manager *)v;
-	
-	int addlen = sizeof(man->requests_connection.address);
+	int addlen = sizeof(man.connection.address);
 	
 	while (!done) {
-		pthread_mutex_lock(&(man->socket_mutex));
-		man->requests_connection.client_fd = accept(man->requests_connection.server_fd, (struct sockaddr *)(&(man->requests_connection.address)), (socklen_t *)(&addlen));
-		if (man->requests_connection.client_fd < 0) {
-			pthread_mutex_unlock(&(man->socket_mutex));
+		pthread_mutex_lock(&(man.socket_mutex));
+		man.connection.client_fd = accept(man.connection.server_fd, (struct sockaddr *)(&(man.connection.address)), (socklen_t *)(&addlen));
+		if (man.connection.client_fd < 0) {
+			pthread_mutex_unlock(&(man.socket_mutex));
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				continue;
 			}
 			
 			perror("Error when accepting connection.");
-			kill(getppid(), SIGTERM);
 			break;
 		}
 		
+		
 		pthread_t thr;
-		kill(getpid(), SIGUSR1);
 		while (pthread_create(&thr, NULL, request_thread, (void*)(&man)));
+		increase_cnt();
 		
 	}
 	
-	while (!done);
+	while (1) {
+		pthread_mutex_lock(&cnt_mutex);
+		if (!cnt_threads) {
+			pthread_mutex_unlock(&cnt_mutex);
+			break;
+		}
+		pthread_mutex_unlock(&cnt_mutex);
+	}
 	
-	while (cnt_threads);
-	
-	kill(getppid(), SIGTERM);
+	wait(NULL);
 
+	requests_shutdown(&man);
+	pthread_mutex_destroy(&cnt_mutex);
 	pthread_exit(NULL);
 }
 
 void *request_thread(void *v)
 {
-	struct threads_manager *man = (struct threads_manager *)v;
-	int client_fd = man->requests_connection.client_fd;
+	
+	struct requests_manager *man = (struct requests_manager *)(v);
+	int client_fd = man->connection.client_fd;
 	pthread_mutex_unlock(&(man->socket_mutex));
 	
 	struct task tsk;
 	if (readTask(client_fd, &tsk)) {
 		perror(NULL);
 		close(client_fd);
-		kill(getpid(), SIGUSR2);
+		decrease_cnt();
 		return NULL;
 	}
 	
@@ -180,7 +172,7 @@ void *request_thread(void *v)
 		perror(NULL);
 		free(tsk.path);
 		close(client_fd);
-		kill(getpid(), SIGUSR2);
+		decrease_cnt();
 		return NULL;
 	}
 	
@@ -191,7 +183,7 @@ void *request_thread(void *v)
 		free(tsk.path);
 		free(anal);
 		close(client_fd);
-		kill(getpid(), SIGUSR2);
+		decrease_cnt();
 		return NULL;
 	}
 	anal->status = ANALYSIS_PENDING;
@@ -199,39 +191,31 @@ void *request_thread(void *v)
 	
 	free(tsk.path);
 	
-	if (threads_add(man, anal)) {
+	if (requests_add(man, anal)) {
 		perror(NULL);
 		free(anal->path);
 		free(anal);
 	}
 
 	close(client_fd);
+	
+	decrease_cnt();
 	pthread_detach(pthread_self());
-	kill(getpid(), SIGUSR2);
+	
 	pthread_exit(NULL);
 }
 
-void *do_responses_manager(void *v)
+void increase_cnt()
 {
-	struct threads_manager *man = (struct threads_manager *)v;
-	
-	int addlen = sizeof(man->responses_connection.address);
-	while (done != 3) {
-		man->responses_connection.client_fd = accept(man->responses_connection.server_fd, (struct sockaddr *)(&(man->responses_connection.address)), (socklen_t *)(&addlen));
-		if (man->responses_connection.client_fd < 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				continue;
-			}
-			
-			perror("Error when accepting connection.");
-			kill(getppid(), SIGTERM);
-			break;
-		}
-	}
-	
-	while (done != 3);
-	
-	return NULL;
+	pthread_mutex_lock(&cnt_mutex);
+	++cnt_threads;
+	pthread_mutex_unlock(&cnt_mutex);
+}
+void decrease_cnt()
+{
+	pthread_mutex_lock(&cnt_mutex);
+	--cnt_threads;
+	pthread_mutex_unlock(&cnt_mutex);
 }
 
 void do_forks_manager(struct forks_manager *man)
@@ -245,27 +229,19 @@ void do_forks_manager(struct forks_manager *man)
 			}
 			
 			perror("Error when accepting connection.");
-			kill(getpid(), SIGTERM);
 			break;
 		}
 
-		int ret = forks_add(man, &done, forkchild_handler);
+		int ret = forks_add(man, &done, reqman_handler);
 		if (ret < 0) {
 			perror("Error adding new fork.");
-			kill(getpid(), SIGTERM);
-			break;
+			return;
 		} else if (!ret) {
 			return;
 		}
 	}
 	
-	while (!done);
-	
 	kill(0, SIGTERM);
-	
-	while (cnt_forks);
-	
-	kill(pid, SIGTERM);
-	
 	forks_shutdown(man);
+
 }
