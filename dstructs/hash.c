@@ -128,8 +128,9 @@ void list_save(struct list **lst, int fd)
 		write(fd, "+", 1);
 		char vessel[11 + strlen(to_clear->path)];
 		snprintf(vessel, 11 + strlen(to_clear->path), "%010d%s", (int)strlen(to_clear->path), to_clear->path);
+		write(fd, vessel, 11 + strlen(to_clear->path));
 		
-		tree_clear(&(to_clear->node));
+		tree_save(&(to_clear->node), fd);
 		free(to_clear->path);
 		free(to_clear);
 	}

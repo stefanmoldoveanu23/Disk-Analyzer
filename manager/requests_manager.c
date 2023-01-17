@@ -52,13 +52,34 @@ int fork_request(int id, struct analysis *anal)
 			close(connection.server_fd);
 			shutdown(connection.client_fd, SHUT_RDWR);
 			
-			return errno;
+			return 1;
 		}
 		
 		pos += sent;
 	}
 	
 	free(request);
+	
+	char vessel[11];
+	memset(vessel, '\0', 11);
+	
+	int left = 10;
+	
+	while (left) {
+		int cnt = read(connection.client_fd, vessel + 10 - left, left);
+		
+		if (cnt < 0) {
+			perror(NULL);
+			close(connection.server_fd);
+			shutdown(connection.client_fd, SHUT_RDWR);
+
+			return 1;
+		}
+		
+		left -= cnt;
+	}
+	
+	anal->pid = (pid_t)atoi(vessel);
 	
 	close(connection.server_fd);
 	shutdown(connection.client_fd, SHUT_RDWR);
