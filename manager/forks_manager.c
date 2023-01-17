@@ -171,6 +171,78 @@ int forks_send_pid(struct forks_manager *man)
 }
 
 
+int forks_fts_parc(struct tree *curr, struct tree *parent, FTS *ftsp, FTSENT *now, volatile sig_atomic_t *done)
+{
+	if (!(curr->info)) {
+		struct state *st = (struct state *)malloc(sizeof(struct state));
+		if (!st) {
+			perror("Error when creating new state.");
+			return 1;
+		}
+		
+		st->size = st->done = 0;
+		curr->info = st;
+	}
+	
+	while (1) {
+		if (*done) {
+			return 0;
+		}
+		
+		FTSENT *nxt = fts_read(ftsp);
+		
+		switch (nxt->fts_info) {
+			case FTS_DNR:
+			case FTS_ERR:
+			case FTS_NS:
+			{
+				perror("Error reading file.");
+				return 1;
+			}
+			case FTS_DEFAULT:
+			case FTS_F:
+			case FTS_SL:
+			case FTS_SLNONE:
+			case FTS_DC:
+			case FTS_DOT:
+			{
+				((struct state *)(curr->info))->size += nxt->fts_statp->st_size;
+				break;
+			}
+			case FTS_D:
+			{
+				struct tree *chld = hash_find(curr->hsh, nxt->fts_name);
+				if (!chld) {
+					if (tree_insert(curr, nxt->fts_name, NULL)) {
+						return 1;
+					}
+					chld = hash_find(curr->hsh, nxt->fts_name);
+				}
+				
+				if (forks_fts_parc(chld, curr, ftsp, nxt, done)) {
+					return 1;
+				}
+				
+				((struct state *)(curr->info))->size += ((struct state *)(chld->info))->size;
+				
+				break;
+			}
+			case FTS_DP:
+			{
+				((struct state *)(curr->info))->done = 1;
+				return 0;
+			}
+			default:
+			{
+				perror("Unknown case encountered.");
+				return 1;
+			}
+		}
+		
+	}
+}
+
+
 int forks_solve(struct forks_manager *man, volatile sig_atomic_t *done)
 {
 	if (tree_insert(man->tre, man->path, NULL)) {
@@ -179,13 +251,17 @@ int forks_solve(struct forks_manager *man, volatile sig_atomic_t *done)
 	
 	struct tree *curr = man->tre;
 	while (1) {
+		int found = 0;
 		for (int i = 0; i < HASH_MOD; ++i) {
 			if (curr->hsh.children[i]) {
 				curr = curr->hsh.children[i]->node;
-				continue;
+				found = 1;
+				break;
 			}
 		}
-		break;
+		if (!found) {
+			break;
+		}
 	}
 	
 	char * const paths[2] = {man->path, NULL};
@@ -195,31 +271,12 @@ int forks_solve(struct forks_manager *man, volatile sig_atomic_t *done)
 		return 1;
 	}
 	
-	FTSENT *file;
+	FTSENT *file = fts_read(ftsp);
 	
-	while (!(*done)) {
-		file = fts_read(ftsp);
-		if (!file) {
-			break;
-		}
-		
-		struct state *st = (struct state *)malloc(sizeof(struct state));
-		if (!st) {
-			perror("Error when creating new state.");
-			fts_close(ftsp);
-			return 1;
-		}
-		
-		st->size = 0;
-		st->done = 0;
-		
-		if (file->fts_info == FTS_D) {
-			if (tree_insert(man->tre, file->fts_path, st)) {
-				perror("Error when inserting new path to tree.");
-				fts_close(ftsp);
-				return 1;
-			}
-		}
+	if (forks_fts_parc(curr, NULL, ftsp, file, done)) {
+		perror("Error parsing directory tree.");
+		fts_close(ftsp);
+		return 1;
 	}
 
 	fts_close(ftsp);
