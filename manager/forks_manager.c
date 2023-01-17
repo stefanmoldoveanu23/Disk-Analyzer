@@ -63,13 +63,16 @@ int forks_add(struct forks_manager *man, volatile sig_atomic_t *done, void (*han
 	
 	close(man->connection.client_fd);
 
-
-	if (forks_read_progress(man)) {
+	
+	int progress = forks_read_progress(man);
+	if (progress < 0) {
 		perror("Could not read the progress of new fork.");
-		close(man->connection.client_fd);
 		tree_clear(&(man->tre));
 		free(man->path);
 		return -1;
+	} else if (progress > 0) {
+		tree_clear(&(man->tre));
+		return 0;
 	}
 	
 	
@@ -96,10 +99,23 @@ int forks_read_progress(struct forks_manager *man)
 	
 	int fd = open(filepath, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR);
 	if (fd == -1) {
-		return 1;
+		return -1;
 	}
 	
+	char type = '\0';
+	read(fd, &type, 1);
 	
+	if (type == '1') {
+		close(fd);
+		return 1;
+	} else if (type == 0) {
+		close(fd);
+		return 0;
+	}
+	
+	if (tree_build(man->tre, fd)) {
+		return -1;
+	}
 	
 	close(fd);
 	return 0;
@@ -182,6 +198,10 @@ int forks_fts_parc(struct tree *curr, struct tree *parent, FTS *ftsp, FTSENT *no
 		
 		st->size = st->done = 0;
 		curr->info = st;
+	}
+	
+	if (((struct state *)(curr->info))->done) {
+		return 0;
 	}
 	
 	while (1) {

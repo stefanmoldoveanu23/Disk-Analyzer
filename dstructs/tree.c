@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <unistd.h>
+#include <errno.h>
+
 
 int tree_init(struct tree **tre)
 {
@@ -56,6 +59,22 @@ int tree_insert(struct tree *tre, char *path, void *info)
 	}
 	tre->info = info;
 	return 0;
+}
+
+
+int tree_build(struct tree *tre, int fd)
+{
+	tre->info = state_read(fd);
+	if (!(tre->info)) {
+		if (errno) {
+			perror("Error reading state.");
+			return 1;
+		} else {
+			tre->info = NULL;
+		}
+	}
+	
+	return hash_build(&(tre->hsh), fd);
 }
 
 
@@ -149,6 +168,45 @@ void tree_save(struct tree **tre, int fd) {
 	
 	hash_save(&((*tre)->hsh), fd);
 	free(*tre);
+}
+
+
+struct state *state_read(int fd)
+{
+	char exists[2];
+	if (read(fd, exists, 1) < 1) {
+		return NULL;
+	}
+	
+	if (exists[0] == '0') {
+		errno = 0;
+		return NULL;
+	}
+	
+	struct state *st = (struct state *)malloc(sizeof(struct state));
+	if (!st) {
+		return NULL;
+	}
+	
+	char done[2];
+	if (read(fd, done, 1) < 1) {
+		free(st);
+		return NULL;
+	}
+	
+	st->done = done[0] - '0';
+	
+	char buffer[11];
+	buffer[10] = '\0';
+	
+	if (read(fd, buffer, 10) < 10) {
+		free(st);
+		return NULL;
+	}
+	
+	st->size = atoi(buffer);
+	
+	return st;
 }
 
 

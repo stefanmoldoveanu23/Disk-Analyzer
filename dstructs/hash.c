@@ -128,7 +128,7 @@ void list_save(struct list **lst, int fd)
 		write(fd, "+", 1);
 		char vessel[11 + strlen(to_clear->path)];
 		snprintf(vessel, 11 + strlen(to_clear->path), "%010d%s", (int)strlen(to_clear->path), to_clear->path);
-		write(fd, vessel, 11 + strlen(to_clear->path));
+		write(fd, vessel, 10 + strlen(to_clear->path));
 		
 		tree_save(&(to_clear->node), fd);
 		free(to_clear->path);
@@ -151,6 +151,59 @@ struct tree *hash_insert(struct hash *hsh, char *path)
 	}
 	
 	return tre;
+}
+
+
+int hash_build(struct hash *hsh, int fd)
+{
+	char movement[2];
+	char buffer[11];
+	buffer[10] = '\0';
+	
+	while (1) {
+		if (read(fd, movement, 1) < 1) {
+			perror("Error reading");
+			return 1;
+		}
+		
+		if (movement[0] == '+') {
+			if (read(fd, buffer, 10) < 10) {
+				perror("Error reading");
+				return 1;
+			}
+			int sz = atoi(buffer);
+			
+			char *name = (char *)malloc(sz + 1);
+			if (!name) {
+				perror("Error allocating memory to name of file");
+				return 1;
+			}
+			name[sz] = '\0';
+			
+			if (read(fd, name, sz) != sz) {
+				perror("Error reading");
+				free(name);
+				return 1;
+			}
+			
+			struct tree *nxt = hash_insert(hsh, name);
+			if (!nxt) {
+				perror("Error inserting into hash");
+				free(name);
+				return 1;
+			}
+			
+			if (tree_build(nxt, fd)) {
+				return 1;
+			}
+		} else if (movement[0] == '-') {
+			return 0;
+		} else {
+			printf("%c\n", movement[0]);
+			perror("Incorrect sign");
+			return 1;
+		}
+	}
 }
 
 

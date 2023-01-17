@@ -43,6 +43,9 @@ void list_save(struct list **lst, int fd);
 struct tree *hash_insert(struct hash *hsh, char *path);
 
 
+int hash_build(struct hash *hsh, int fd);
+
+
 struct tree *hash_find(const struct hash hsh, const char *path);
 
 
