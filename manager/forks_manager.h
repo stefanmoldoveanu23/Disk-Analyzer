@@ -9,6 +9,11 @@
 #include "../dstructs/tree.h"
 
 struct forks_manager{
+	volatile sig_atomic_t *done;
+	volatile sig_atomic_t *interrupted;
+	volatile sig_atomic_t *suspended;
+	void (*handler)(int);
+	
 	struct socket_connection connection;
 
 	int id;
@@ -23,7 +28,7 @@ struct forks_manager{
 
 int forks_startup(struct forks_manager *man);
 
-int forks_add(struct forks_manager *man, volatile sig_atomic_t *done, void (*handler)(int));
+int forks_add(struct forks_manager *man);
 
 int forks_read_progress(struct forks_manager *man);
 
@@ -33,7 +38,7 @@ int forks_send_pid(struct forks_manager *man);
 
 int forks_send_result(struct forks_manager *man, int result);
 
-int forks_solve(struct forks_manager *man, volatile sig_atomic_t *done);
+int forks_solve(struct forks_manager *man);
 
 void forks_save(struct forks_manager *man);
 

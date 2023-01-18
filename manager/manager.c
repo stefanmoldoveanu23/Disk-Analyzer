@@ -38,6 +38,9 @@ volatile sig_atomic_t cnt_forks = 0;
 volatile sig_atomic_t cnt_need = 0;
 
 volatile sig_atomic_t done = 0;
+volatile sig_atomic_t interrupted = 0;
+volatile sig_atomic_t suspended = 0;
+
 pid_t pid;
 
 void child_done_handler(int signum) {
@@ -68,8 +71,26 @@ void forkman_handler1(int signum) {
 }
 
 void forkchild_handler(int signum) {
-	signal(SIGTERM, SIG_IGN);
-	done = 1;
+	switch (signum) {
+		case SIGTERM: {
+			signal(SIGTERM, SIG_IGN);
+			done = 1;
+			break;
+		}
+		case SIGINT: {
+			signal(SIGINT, SIG_IGN);
+			interrupted = 1;
+			break;
+		}
+		case SIGTSTP: {
+			suspended = 1;
+			break;
+		}
+		case SIGCONT: {
+			suspended = 0;
+			break;
+		}
+	}
 }
 
 void do_threads_manager();
@@ -99,12 +120,15 @@ int main()
 	
 	
 	if (pid) {
+		fman.done = &done;
+		fman.interrupted = &interrupted;
+		fman.suspended = &suspended;
+		fman.handler = forkchild_handler;
+		
 		signal(SIGTERM, forkman_handler1);
 		do_forks_manager(&fman);
 	} else {
 		signal(SIGTERM, reqman_handler);
-		
-		
 		
 		tree_clear(&(fman.tre));
 		do_threads_manager();
@@ -274,7 +298,7 @@ void do_forks_manager(struct forks_manager *man)
 			break;
 		}
 
-		int ret = forks_add(man, &done, forkchild_handler);
+		int ret = forks_add(man);
 		if (ret < 0) {
 			perror("Error adding new fork.");
 			kill(getpid(), SIGTERM);

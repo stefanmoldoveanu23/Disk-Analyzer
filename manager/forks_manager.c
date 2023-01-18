@@ -36,8 +36,9 @@ int forks_startup(struct forks_manager *man)
 	return 0;
 }
 
-int forks_add(struct forks_manager *man, volatile sig_atomic_t *done, void (*handler)(int))
+int forks_add(struct forks_manager *man)
 {
+	
 	pid_t pid = fork();
 	if (pid == -1) {
 		forks_send_result(man, 0);
@@ -49,7 +50,10 @@ int forks_add(struct forks_manager *man, volatile sig_atomic_t *done, void (*han
 		return 1;
 	}
 	
-	signal(SIGTERM, handler);
+	signal(SIGTERM, man->handler);
+	signal(SIGINT, man->handler);
+	signal(SIGTSTP, man->handler);
+	signal(SIGCONT, man->handler);
 	
 	if (forks_read_path(man)) {
 		perror("Could not read path of new fork.");
@@ -84,7 +88,7 @@ int forks_add(struct forks_manager *man, volatile sig_atomic_t *done, void (*han
 		return 0;
 	}
 	
-	if (forks_solve(man, done)) {
+	if (forks_solve(man)) {
 		forks_send_result(man, 0);
 	} else {
 		forks_send_result(man, 1);
@@ -236,7 +240,7 @@ int forks_send_result(struct forks_manager *man, int result)
 }
 
 
-int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp, volatile sig_atomic_t *done)
+int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp)
 {
 	if (!(curr->info)) {
 		struct state *st = (struct state *)malloc(sizeof(struct state));
@@ -298,7 +302,7 @@ int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp, vola
 			}
 			case FTS_D:
 			{
-				if (*done) {
+				if (*(man->done)) {
 					return 0;
 				}
 				struct tree *chld = hash_find(curr->hsh, nxt->fts_name);
@@ -309,7 +313,7 @@ int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp, vola
 					chld = hash_find(curr->hsh, nxt->fts_name);
 				}
 				
-				if (forks_fts_parc(man, chld, ftsp, done)) {
+				if (forks_fts_parc(man, chld, ftsp)) {
 					return 1;
 				}
 				
@@ -333,7 +337,7 @@ int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp, vola
 }
 
 
-int forks_solve(struct forks_manager *man, volatile sig_atomic_t *done)
+int forks_solve(struct forks_manager *man)
 {
 	if (tree_insert(man->tre, man->path, NULL)) {
 		return 1;
@@ -368,7 +372,7 @@ int forks_solve(struct forks_manager *man, volatile sig_atomic_t *done)
 	fts_read(ftsp);
 	
 	man->last_send = time(NULL);
-	if (forks_fts_parc(man, curr, ftsp, done)) {
+	if (forks_fts_parc(man, curr, ftsp)) {
 		perror("Error parsing directory tree.");
 		fts_close(ftsp);
 		return 1;
