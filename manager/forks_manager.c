@@ -389,6 +389,7 @@ void forks_save(struct forks_manager *man)
 	int fd = open(filepath, O_WRONLY);
 	if (fd == -1) {
 		tree_clear(&(man->tre));
+		free(man->path);
 		return;
 	}
 	

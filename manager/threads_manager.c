@@ -438,6 +438,7 @@ int threads_add(struct threads_manager *man, struct analysis *anal)
 	
 	pthread_mutex_lock(&(man->paths_mutex));
 	if (tree_find_prefix(man->paths, anal->path, NULL)) {
+		pthread_mutex_unlock(&(man->paths_mutex));
 		perror("Analysis with path already exists.");
 		return 1;
 	}
@@ -447,6 +448,7 @@ int threads_add(struct threads_manager *man, struct analysis *anal)
 	struct treap *new_id = get_free_id(&(man->available_ids));
 	if (!new_id) {
 		perror("Could not get new id.");
+		pthread_mutex_unlock(&(man->available_mutex));
 		return 1;
 	}
 	pthread_mutex_unlock(&(man->available_mutex));
@@ -467,6 +469,7 @@ int threads_add(struct threads_manager *man, struct analysis *anal)
 	pthread_mutex_lock(&(man->paths_mutex));
 	if (tree_insert(man->paths, anal->path, (void *)id)) {
 		perror("Could not insert path in tree when creating new analysis.");
+		pthread_mutex_unlock(&(man->paths_mutex));
 		free(id);
 		
 		pthread_mutex_lock(&(man->available_mutex));
