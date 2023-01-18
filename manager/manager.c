@@ -147,7 +147,7 @@ void *do_requests_manager(void *v)
 		
 		pthread_t thr;
 		kill(getpid(), SIGUSR1);
-		while (pthread_create(&thr, NULL, request_thread, (void*)(&man)));
+		while (pthread_create(&thr, NULL, request_thread, (void*)(man)));
 		
 	}
 	
@@ -254,7 +254,10 @@ void *do_responses_manager(void *v)
 			}
 			
 			if (rd == 1) {
-				printf("Got message: %d %c\n", id, result);
+				
+				if (result == '0') {
+					threads_remove(man, id);
+				}
 			}
 		}
 		

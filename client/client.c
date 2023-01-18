@@ -33,6 +33,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	
+	free(tsk.path);
+	
 	struct socket_connection connection;
 	if (create_socket_connector(&connection, PORT)) {
 		perror(NULL);

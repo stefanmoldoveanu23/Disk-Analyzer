@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <wait.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -16,6 +18,7 @@
 #define PORT_ACCEPTOR_RESPONSES 8082
 
 #define ANALYSES_PATH "../data/analyses"
+#define DIR_PATH "../data/"
 
 
 int fork_request(int id, struct analysis *anal)
@@ -423,6 +426,47 @@ int threads_add(struct threads_manager *man, struct analysis *anal)
 	pthread_mutex_unlock(&(man->analyses_mutex));
 	
 	return 0;
+}
+
+
+int threads_remove(struct threads_manager *man, const int id)
+{
+	
+	pthread_mutex_lock(&(man->analyses_mutex));
+	struct treap *trp = treap_extract(&(man->analyses), id);
+	if (trp) {
+		--man->analysis_cnt;
+	}
+	pthread_mutex_unlock(&(man->analyses_mutex));
+	
+	if (trp) {
+		char name[20];
+		memset(name, 0, 20);
+		snprintf(name, 20, "%s%d", DIR_PATH, id);
+		
+		remove(name);
+		
+		if (getpgid(getpid()) == getpgid(trp->anal->pid)) {
+			kill(SIGINT, trp->anal->pid);
+			waitpid(trp->anal->pid, NULL, 0);
+		}
+
+		pthread_mutex_lock(&(man->paths_mutex));
+		tree_remove(man->paths, trp->anal->path);
+		pthread_mutex_unlock(&(man->paths_mutex));
+		
+		free(trp->anal->path);
+		free(trp->anal);
+		trp->anal = NULL;
+		
+		pthread_mutex_lock(&(man->available_mutex));
+		treap_insert_node(&(man->available_ids), trp);
+		pthread_mutex_unlock(&(man->available_mutex));
+		
+		return 0;
+	} else {
+		return 1;
+	}
 }
 
 

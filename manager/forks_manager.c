@@ -37,6 +37,7 @@ int forks_add(struct forks_manager *man, volatile sig_atomic_t *done, void (*han
 {
 	pid_t pid = fork();
 	if (pid == -1) {
+		forks_send_result(man, 0);
 		return -1;
 	}
 	
@@ -49,6 +50,7 @@ int forks_add(struct forks_manager *man, volatile sig_atomic_t *done, void (*han
 	
 	if (forks_read_path(man)) {
 		perror("Could not read path of new fork.");
+		forks_send_result(man, 0);
 		close(man->connection.client_fd);
 		tree_clear(&(man->tre));
 		return -1;
@@ -56,6 +58,7 @@ int forks_add(struct forks_manager *man, volatile sig_atomic_t *done, void (*han
 	
 	if (forks_send_pid(man)) {
 		perror("Could not send back pid.");
+		forks_send_result(man, 0);
 		close(man->connection.client_fd);
 		tree_clear(&(man->tre));
 		return -1;
@@ -68,24 +71,25 @@ int forks_add(struct forks_manager *man, volatile sig_atomic_t *done, void (*han
 	int progress = forks_read_progress(man);
 	if (progress < 0) {
 		perror("Could not read the progress of new fork.");
+		forks_send_result(man, 0);
 		tree_clear(&(man->tre));
 		free(man->path);
 		return -1;
 	} else if (progress > 0) {
+		forks_send_result(man, 1);
 		tree_clear(&(man->tre));
 		return 0;
 	}
 	
 	
 	if (forks_solve(man, done)) {
-		perror("Could not do this.");
+		forks_send_result(man, 0);
 	} else {
-		
+		forks_send_result(man, 1);
 	}
 	
 	forks_save(man);
 	
-	forks_send_result(man, 1);
 	
 	return 0;
 }
