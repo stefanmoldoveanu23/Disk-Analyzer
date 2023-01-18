@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #define PORT_ACCEPTOR 8081
+#define PORT_RESPONSE 8082
 #define DIR_PATH "../data/"
 
 
@@ -82,11 +83,10 @@ int forks_add(struct forks_manager *man, volatile sig_atomic_t *done, void (*han
 		
 	}
 	
-	
-	
 	forks_save(man);
 	
-	*done = 1;
+	forks_send_result(man, 1);
+	
 	return 0;
 }
 
@@ -183,6 +183,41 @@ int forks_send_pid(struct forks_manager *man)
 		pos += sent;
 	}
 	
+	return 0;
+}
+
+
+int forks_send_result(struct forks_manager *man, int result)
+{
+	char response[12];
+	
+	if (snprintf(response, 12, "%010d%c", man->id, (result ? '1' : '0')) < 0) {
+		return 1;
+	}
+	response[11] = '\0';
+	
+	struct socket_connection connection;
+	if (create_socket_connector(&connection, PORT_RESPONSE)) {
+		perror("Error creating response socket");
+		return 1;
+	}
+	
+	connection.server_fd = connect(connection.client_fd, (struct sockaddr *)(&connection.address), sizeof(connection.address));
+	if (connection.server_fd < 0) {
+		perror("Error connecting to response socket");
+		shutdown(connection.client_fd, SHUT_RDWR);
+		return 1;
+	}
+	
+	if (create_socket_send_message(response, connection.client_fd)) {
+		perror("Error sending response");
+		close(connection.server_fd);
+		shutdown(connection.client_fd, SHUT_RDWR);
+		return 1;
+	}
+	
+	close(connection.server_fd);
+	shutdown(connection.client_fd, SHUT_RDWR);
 	return 0;
 }
 

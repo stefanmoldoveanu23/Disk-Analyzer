@@ -17,4 +17,7 @@ int create_socket_acceptor(struct socket_connection *connection, const int port)
 /// create a socket and prepare it to connect to listening sockets on given port
 int create_socket_connector(struct socket_connection *connection, const int port);
 
+
+int create_socket_send_message(char *buffer, int fd);
+
 #endif

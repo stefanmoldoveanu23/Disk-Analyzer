@@ -1,5 +1,7 @@
 #include "create_socket.h"
 
+#include <string.h>
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -53,6 +55,25 @@ int create_socket_connector(struct socket_connection *connection, const int port
 	if (inet_pton(AF_INET, "127.0.0.1", &(connection->address.sin_addr)) <= 0) {
 		close(connection->client_fd);
 		return 1;
+	}
+	
+	return 0;
+}
+
+
+int create_socket_send_message(char *buffer, int fd)
+{
+	int pos = 0, total = strlen(buffer);
+	while (pos != total) {
+		int sent = send(fd, buffer + pos, total - pos, 0);
+		
+		if (sent < 0) {
+			perror(NULL);
+			
+			return 1;
+		}
+		
+		pos += sent;
 	}
 	
 	return 0;

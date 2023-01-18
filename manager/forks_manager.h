@@ -26,6 +26,8 @@ int forks_read_path(struct forks_manager *man);
 
 int forks_send_pid(struct forks_manager *man);
 
+int forks_send_result(struct forks_manager *man, int result);
+
 int forks_solve(struct forks_manager *man, volatile sig_atomic_t *done);
 
 void forks_save(struct forks_manager *man);

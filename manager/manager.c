@@ -227,6 +227,38 @@ void *do_responses_manager(void *v)
 			kill(getppid(), SIGTERM);
 			break;
 		}
+		
+		char buffer[11];
+		buffer[10] = '\0';
+		
+		int left = 10;
+		while (left) {
+			int cnt = read(man->responses_connection.client_fd, buffer + 10 - left, left);
+			if (cnt < 0) {
+				break;
+			}
+			
+			left -= cnt;
+		}
+		
+		if (!left) {
+			int id = atoi(buffer);
+			
+			char result;
+			int rd = 1;
+			while (1) {
+				rd = read(man->responses_connection.client_fd, &result, 1);
+				if (rd) {
+					break;
+				}
+			}
+			
+			if (rd == 1) {
+				printf("Got message: %d %c\n", id, result);
+			}
+		}
+		
+		close(man->responses_connection.client_fd);
 	}
 	
 	while (done != 3);
