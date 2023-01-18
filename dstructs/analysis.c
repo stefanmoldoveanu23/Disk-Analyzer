@@ -55,6 +55,14 @@ int analysis_read(int *id, struct analysis *anal, int fd)
 		return -1;
 	}
 	
+	if (read_int(&(anal->cnt_dirs), fd)) {
+		return -1;
+	}
+	
+	if (read_int(&(anal->cnt_files), fd)) {
+		return -1;
+	}
+	
 	if (read_string(&(anal->path), fd)) {
 		return -1;
 	}
@@ -95,9 +103,9 @@ int analysis_write(const int id, const struct analysis *anal, int fd)
 {
 	char *to_print;
 	if (anal->status == ANALYSIS_INPROGRESS) {
-		to_print = (char *)malloc(10 + 10 + 10 + strlen(anal->path) + 10 + 10 + 1);
+		to_print = (char *)malloc(10 + 10 + 10 + 10 + 10 + strlen(anal->path) + 10 + 10 + 1);
 	} else {
-		to_print = (char *)malloc(10 + 10 + 10 + strlen(anal->path) + 10 + 1);
+		to_print = (char *)malloc(10 + 10 + 10 + 10 + 10 + strlen(anal->path) + 10 + 1);
 	}
 	
 	if (!to_print) {
@@ -116,6 +124,16 @@ int analysis_write(const int id, const struct analysis *anal, int fd)
 	}
 	
 	if (write_int(anal->total_time, to_print) < 0) {
+		free(to_print);
+		return -1;
+	}
+	
+	if (write_int(anal->cnt_dirs, to_print) < 0) {
+		free(to_print);
+		return -1;
+	}
+	
+	if (write_int(anal->cnt_files, to_print) < 0) {
 		free(to_print);
 		return -1;
 	}

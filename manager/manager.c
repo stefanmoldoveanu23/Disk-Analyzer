@@ -16,8 +16,26 @@
 
 #define PORT 8080
 
+pthread_mutex_t counter_mutex;
+int cnt_threads = 0;
+
+void incr_counter()
+{
+	pthread_mutex_lock(&counter_mutex);
+	++cnt_threads;
+	pthread_mutex_unlock(&counter_mutex);
+}
+
+void decr_counter()
+{
+	pthread_mutex_lock(&counter_mutex);
+	--cnt_threads;
+	pthread_mutex_unlock(&counter_mutex);
+}
+
+
 volatile sig_atomic_t cnt_forks = 0;
-volatile sig_atomic_t cnt_threads = 0;
+volatile sig_atomic_t cnt_need = 0;
 
 volatile sig_atomic_t done = 0;
 pid_t pid;
@@ -25,14 +43,6 @@ pid_t pid;
 void child_done_handler(int signum) {
 	wait(NULL);
 	--cnt_forks;
-}
-
-void thread_start_handler(int signum) {
-	++cnt_threads;
-}
-
-void thread_done_handler(int signum) {
-	--cnt_threads;
 }
 
 void resman_handler(int signum) {
@@ -94,8 +104,7 @@ int main()
 	} else {
 		signal(SIGTERM, reqman_handler);
 		
-		signal(SIGUSR1, thread_start_handler);
-		signal(SIGUSR2, thread_done_handler);
+		
 		
 		tree_clear(&(fman.tre));
 		do_threads_manager();
@@ -106,6 +115,10 @@ int main()
 
 void do_threads_manager()
 {
+	if (pthread_mutex_init(&counter_mutex, NULL)) {
+		perror("Error when initializing thread counter mutex");
+		exit(errno);
+	}
 	
 	struct threads_manager man;
 	if (threads_startup(&man)) {
@@ -123,6 +136,7 @@ void do_threads_manager()
 	pthread_join(responses_t, NULL);
 	
 	threads_shutdown(&man);
+	pthread_mutex_destroy(&counter_mutex);
 }
 
 void *do_requests_manager(void *v)
@@ -146,14 +160,18 @@ void *do_requests_manager(void *v)
 		}
 		
 		pthread_t thr;
-		kill(getpid(), SIGUSR1);
+		incr_counter();
 		while (pthread_create(&thr, NULL, request_thread, (void*)(man)));
 		
 	}
 	
 	while (!done);
 	
-	while (cnt_threads);
+	pthread_mutex_lock(&counter_mutex);
+	while (cnt_threads) {
+		pthread_mutex_unlock(&counter_mutex);
+	}
+	pthread_mutex_unlock(&counter_mutex);
 	
 	kill(getppid(), SIGTERM);
 
@@ -170,9 +188,11 @@ void *request_thread(void *v)
 	if (readTask(client_fd, &tsk)) {
 		perror(NULL);
 		close(client_fd);
-		kill(getpid(), SIGUSR2);
+		decr_counter();
 		return NULL;
 	}
+	
+	//if (tsk.cnt)
 	
 	struct analysis *anal = (struct analysis *)malloc(sizeof(struct analysis));
 	
@@ -180,7 +200,7 @@ void *request_thread(void *v)
 		perror(NULL);
 		free(tsk.path);
 		close(client_fd);
-		kill(getpid(), SIGUSR2);
+		decr_counter();
 		return NULL;
 	}
 	
@@ -191,11 +211,12 @@ void *request_thread(void *v)
 		free(tsk.path);
 		free(anal);
 		close(client_fd);
-		kill(getpid(), SIGUSR2);
+		decr_counter();
 		return NULL;
 	}
 	anal->status = ANALYSIS_PENDING;
 	anal->suspended = ANALYSIS_RESUMED;
+	anal->cnt_dirs = anal->cnt_files = 0;
 	
 	free(tsk.path);
 	
@@ -206,8 +227,8 @@ void *request_thread(void *v)
 	}
 
 	close(client_fd);
+	decr_counter();
 	pthread_detach(pthread_self());
-	kill(getpid(), SIGUSR2);
 	pthread_exit(NULL);
 }
 
@@ -228,40 +249,9 @@ void *do_responses_manager(void *v)
 			break;
 		}
 		
-		char buffer[11];
-		buffer[10] = '\0';
-		
-		int left = 10;
-		while (left) {
-			int cnt = read(man->responses_connection.client_fd, buffer + 10 - left, left);
-			if (cnt < 0) {
-				break;
-			}
-			
-			left -= cnt;
+		if (threads_read_results(man)) {
+			perror("Error reading results");
 		}
-		
-		if (!left) {
-			int id = atoi(buffer);
-			
-			char result;
-			int rd = 1;
-			while (1) {
-				rd = read(man->responses_connection.client_fd, &result, 1);
-				if (rd) {
-					break;
-				}
-			}
-			
-			if (rd == 1) {
-				
-				if (result == '0') {
-					threads_remove(man, id);
-				}
-			}
-		}
-		
-		close(man->responses_connection.client_fd);
 	}
 	
 	while (done != 3);

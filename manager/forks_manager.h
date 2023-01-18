@@ -12,6 +12,11 @@ struct forks_manager{
 	struct socket_connection connection;
 
 	int id;
+	
+	int last_send;
+	int cnt_dirs;
+	int cnt_files;
+	
 	char *path;
 	struct tree *tre;
 };

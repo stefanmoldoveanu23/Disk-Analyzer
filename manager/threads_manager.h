@@ -16,6 +16,7 @@ struct threads_manager{
 	
 	pthread_mutex_t analyses_mutex;
 	int analysis_cnt;
+	int need;
 	struct treap *analyses;
 	
 	pthread_mutex_t paths_mutex;
@@ -27,6 +28,9 @@ struct threads_manager{
 
 
 int threads_startup(struct threads_manager *man);
+
+
+int threads_read_results(struct threads_manager *man);
 
 
 int threads_add(struct threads_manager *man, struct analysis *anal);

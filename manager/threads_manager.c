@@ -313,6 +313,83 @@ int threads_startup(struct threads_manager *man)
 }
 
 
+int threads_read_results_string(int fd, char *buffer, int sz)
+{
+	int left = sz;
+	while (left) {
+		int cnt = read(fd, buffer + sz - left, left);
+		if (cnt < 0) {
+			break;
+		}
+	
+		left -= cnt;
+	}
+	
+	return (left ? 1 : 0);
+}
+
+
+int threads_read_results(struct threads_manager *man)
+{
+	char buffer[11];
+	buffer[10] = '\0';
+	
+	char result;
+	int rd = 1;
+	while (1) {
+		rd = read(man->responses_connection.client_fd, &result, 1);
+		if (rd) {
+			break;
+		}
+	}
+	
+	if (rd != 1) {
+		close(man->responses_connection.client_fd);
+		return 1;
+	}
+
+	int id, cnt_dirs, cnt_files;
+	
+	if (threads_read_results_string(man->responses_connection.client_fd, buffer, 10)) {
+		close(man->responses_connection.client_fd);
+		return 1;
+	}
+	id = atoi(buffer);
+	
+	if (result == '0') {
+		threads_remove(man, id);
+		return 0;
+	}
+	
+	if (threads_read_results_string(man->responses_connection.client_fd, buffer, 10)) {
+		close(man->responses_connection.client_fd);
+		return 1;
+	}
+	cnt_dirs = atoi(buffer);
+	
+	if (threads_read_results_string(man->responses_connection.client_fd, buffer, 10)) {
+		close(man->responses_connection.client_fd);
+		return 1;
+	}
+	cnt_files = atoi(buffer);
+	
+	struct analysis *anal;
+	pthread_mutex_lock(&(man->analyses_mutex));
+	if (treap_find(man->analyses, id, &anal)) {
+		anal->cnt_dirs += cnt_dirs;
+		anal->cnt_files += cnt_files;
+	} else {
+		pthread_mutex_unlock(&(man->analyses_mutex));
+		close(man->responses_connection.client_fd);
+		return 1;
+	}
+	pthread_mutex_unlock(&(man->analyses_mutex));
+	
+	close(man->responses_connection.client_fd);
+	return 0;
+}
+
+
 struct treap *get_free_id(struct treap **trp)
 {
 	if (!(*trp)) {

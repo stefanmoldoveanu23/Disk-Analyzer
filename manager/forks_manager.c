@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <time.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -28,6 +29,8 @@ int forks_startup(struct forks_manager *man)
 		tree_clear(&(man->tre));
 		return 1;
 	}
+	
+	man->cnt_dirs = man->cnt_files = 0;
 	
 	man->path = NULL;
 	return 0;
@@ -80,7 +83,6 @@ int forks_add(struct forks_manager *man, volatile sig_atomic_t *done, void (*han
 		tree_clear(&(man->tre));
 		return 0;
 	}
-	
 	
 	if (forks_solve(man, done)) {
 		forks_send_result(man, 0);
@@ -193,12 +195,20 @@ int forks_send_pid(struct forks_manager *man)
 
 int forks_send_result(struct forks_manager *man, int result)
 {
-	char response[12];
+	char response[32];
 	
-	if (snprintf(response, 12, "%010d%c", man->id, (result ? '1' : '0')) < 0) {
-		return 1;
+	if (result == 0) {
+		if (snprintf(response, 32, "%c%010d", result + '0', man->id) < 0) {
+			return 1;
+		}
+	} else {
+		if (snprintf(response, 32, "%c%010d%010d%010d", result + '0', man->id, man->cnt_dirs, man->cnt_files) < 0) {
+			return 1;
+		}
 	}
-	response[11] = '\0';
+	response[31] = '\0';
+	
+	man->cnt_dirs = man->cnt_files = 0;
 	
 	struct socket_connection connection;
 	if (create_socket_connector(&connection, PORT_RESPONSE)) {
@@ -226,7 +236,7 @@ int forks_send_result(struct forks_manager *man, int result)
 }
 
 
-int forks_fts_parc(struct tree *curr, struct tree *parent, FTS *ftsp, FTSENT *now, volatile sig_atomic_t *done)
+int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp, volatile sig_atomic_t *done)
 {
 	if (!(curr->info)) {
 		struct state *st = (struct state *)malloc(sizeof(struct state));
@@ -244,11 +254,29 @@ int forks_fts_parc(struct tree *curr, struct tree *parent, FTS *ftsp, FTSENT *no
 	}
 	
 	while (1) {
-		if (*done) {
-			return 0;
+		if (time(NULL) - man->last_send >= 1) {
+			forks_send_result(man, 2);
 		}
 		
 		FTSENT *nxt = fts_read(ftsp);
+		
+		switch (nxt->fts_info) {
+			case FTS_DEFAULT:
+			case FTS_F:
+			case FTS_SL:
+			case FTS_SLNONE:
+			{
+				++man->cnt_files;
+				break;
+			}
+			case FTS_D:
+			case FTS_DC:
+			case FTS_DOT:
+			{
+				++man->cnt_dirs;
+				break;
+			}
+		}
 		
 		switch (nxt->fts_info) {
 			case FTS_DNR:
@@ -270,6 +298,9 @@ int forks_fts_parc(struct tree *curr, struct tree *parent, FTS *ftsp, FTSENT *no
 			}
 			case FTS_D:
 			{
+				if (*done) {
+					return 0;
+				}
 				struct tree *chld = hash_find(curr->hsh, nxt->fts_name);
 				if (!chld) {
 					if (tree_insert(curr, nxt->fts_name, NULL)) {
@@ -278,7 +309,7 @@ int forks_fts_parc(struct tree *curr, struct tree *parent, FTS *ftsp, FTSENT *no
 					chld = hash_find(curr->hsh, nxt->fts_name);
 				}
 				
-				if (forks_fts_parc(chld, curr, ftsp, nxt, done)) {
+				if (forks_fts_parc(man, chld, ftsp, done)) {
 					return 1;
 				}
 				
@@ -323,6 +354,10 @@ int forks_solve(struct forks_manager *man, volatile sig_atomic_t *done)
 		}
 	}
 	
+	if (curr->info && ((struct state *)(curr->info))->done) {
+		return 0;
+	}
+	
 	char * const paths[2] = {man->path, NULL};
 	
 	FTS *ftsp = fts_open(paths, FTS_PHYSICAL | FTS_SEEDOT, NULL);
@@ -330,9 +365,10 @@ int forks_solve(struct forks_manager *man, volatile sig_atomic_t *done)
 		return 1;
 	}
 	
-	FTSENT *file = fts_read(ftsp);
+	fts_read(ftsp);
 	
-	if (forks_fts_parc(curr, NULL, ftsp, file, done)) {
+	man->last_send = time(NULL);
+	if (forks_fts_parc(man, curr, ftsp, done)) {
 		perror("Error parsing directory tree.");
 		fts_close(ftsp);
 		return 1;

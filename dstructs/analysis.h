@@ -14,6 +14,10 @@ struct analysis{
 	// total time spend analysing, and last analysis start time
 	int total_time;
 	int last_start;
+	
+	// progess data
+	int cnt_files;
+	int cnt_dirs;
 
 	// general info
 	char *path;
