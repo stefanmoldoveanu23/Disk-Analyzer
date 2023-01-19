@@ -69,6 +69,41 @@ int main(int argc, char *argv[])
 	
 	free(request);
 	
+	char buffer[11];
+	memset(buffer, 0, 11);
+	
+	int left = 10;
+	while (left) {
+		int cnt = read(connection.client_fd, buffer + 10 - left, left);
+		if (cnt < 0) {
+			perror("Error reading response");
+			break;
+		}
+		
+		left -= cnt;
+	}
+	
+	if (!left) {
+		int sz = atoi(buffer);
+		char response[sz + 1];
+		memset(response, 0, sz + 1);
+		
+		left = sz;
+		while (left) {
+			int cnt = read(connection.client_fd, response + sz - left, left);
+			if (cnt < 0) {
+				perror("Error reading response");
+				break;
+			}
+			
+			left -= cnt;
+		}
+		
+		if (!left) {
+			printf("%s", response);
+		}
+	}
+	
 	close(connection.server_fd);
 	shutdown(connection.client_fd, SHUT_RDWR);
 	

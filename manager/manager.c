@@ -216,39 +216,52 @@ void *request_thread(void *v)
 		return NULL;
 	}
 	
-	//if (tsk.cnt)
+	switch (tsk.cnt) {
+		case 1: {
+			struct analysis *anal = (struct analysis *)malloc(sizeof(struct analysis));
 	
-	struct analysis *anal = (struct analysis *)malloc(sizeof(struct analysis));
-	
-	if (!anal) {
-		perror(NULL);
-		free(tsk.path);
-		close(client_fd);
-		decr_counter();
-		return NULL;
+			if (!anal) {
+				perror(NULL);
+				free(tsk.path);
+				close(client_fd);
+				decr_counter();
+				return NULL;
+			}
+			
+			anal->total_time = 0;
+			anal->path = strdup(tsk.path);
+			if (!(anal->path)) {
+				perror(NULL);
+				free(tsk.path);
+				free(anal);
+				close(client_fd);
+				decr_counter();
+				return NULL;
+			}
+			
+			anal->priority = tsk.priority;
+			anal->status = ANALYSIS_PENDING;
+			anal->suspended = ANALYSIS_RESUMED;
+			anal->cnt_dirs = anal->cnt_files = 0;
+			
+			free(tsk.path);
+			
+			if (threads_add(man, anal, client_fd)) {
+				perror(NULL);
+				free(anal->path);
+				free(anal);
+			}
+
+			
+			break;
+		}
+		case 2: {
+			threads_suspend(man, tsk.id, client_fd);
+			break;
+		}
 	}
 	
-	anal->total_time = 0;
-	anal->path = strdup(tsk.path);
-	if (!(anal->path)) {
-		perror(NULL);
-		free(tsk.path);
-		free(anal);
-		close(client_fd);
-		decr_counter();
-		return NULL;
-	}
-	anal->status = ANALYSIS_PENDING;
-	anal->suspended = ANALYSIS_RESUMED;
-	anal->cnt_dirs = anal->cnt_files = 0;
 	
-	free(tsk.path);
-	
-	if (threads_add(man, anal)) {
-		perror(NULL);
-		free(anal->path);
-		free(anal);
-	}
 
 	close(client_fd);
 	decr_counter();
@@ -272,6 +285,7 @@ void *do_responses_manager(void *v)
 			kill(getppid(), SIGTERM);
 			break;
 		}
+		printf("Hi: %d\n", man->responses_connection.client_fd);
 		
 		if (threads_read_results(man)) {
 			perror("Error reading results");

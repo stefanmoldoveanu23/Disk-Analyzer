@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #define ID_MAX 100000
 #define PORT_ACCEPTOR_REQUESTS 8080
@@ -40,15 +42,14 @@ int fork_request(int id, struct analysis *anal)
 	connection.server_fd = connect(connection.client_fd, (struct sockaddr *)(&connection.address), sizeof(connection.address));
 	if (connection.server_fd < 0) {
 		perror(NULL);
-		shutdown(connection.client_fd, SHUT_RDWR);
+		close(connection.client_fd);
 		return 1;
 	}
 	
 	if (create_socket_send_message(request, connection.client_fd)) {
 		perror("Error sending request to fork manager");
 		
-		close(connection.server_fd);
-		shutdown(connection.client_fd, SHUT_RDWR);
+		close(connection.client_fd);
 		return 1;
 	}
 	
@@ -62,8 +63,7 @@ int fork_request(int id, struct analysis *anal)
 		
 		if (cnt < 0) {
 			perror(NULL);
-			close(connection.server_fd);
-			shutdown(connection.client_fd, SHUT_RDWR);
+			close(connection.client_fd);
 
 			return 1;
 		}
@@ -71,10 +71,12 @@ int fork_request(int id, struct analysis *anal)
 		left -= cnt;
 	}
 	
-	anal->pid = (pid_t)atoi(vessel);
+	anal->pid = (pid_t)atoi(vessel);			
+	if (getpgid(getpid()) == getpgid(anal->pid)) {
+		setpriority(PRIO_PROCESS, anal->pid, getpriority(PRIO_PROCESS, anal->pid) + 2 - anal->priority);
+	}
 	
-	close(connection.server_fd);
-	shutdown(connection.client_fd, SHUT_RDWR);
+	close(connection.client_fd);
 	
 	return 0;
 }
@@ -331,6 +333,7 @@ int threads_read_results_string(int fd, char *buffer, int sz)
 
 int threads_read_results(struct threads_manager *man)
 {
+	
 	char buffer[11];
 	buffer[10] = '\0';
 	
@@ -357,7 +360,7 @@ int threads_read_results(struct threads_manager *man)
 	id = atoi(buffer);
 	
 	if (result == '0') {
-		threads_remove(man, id);
+		threads_remove(man, id, -1);
 		return 0;
 	}
 	
@@ -428,7 +431,7 @@ void return_id(struct treap **trp, struct treap *node) {
 }
 
 
-int threads_add(struct threads_manager *man, struct analysis *anal)
+int threads_add(struct threads_manager *man, struct analysis *anal, int fd)
 {
 	struct stat sb;
 	if (stat(anal->path, &sb) || S_ISDIR(sb.st_mode) == 0) {
@@ -453,7 +456,9 @@ int threads_add(struct threads_manager *man, struct analysis *anal)
 	}
 	pthread_mutex_unlock(&(man->available_mutex));
 	
+	int val_id;
 	new_id->anal = anal;
+	val_id = new_id->id;
 	
 	int *id = (int *)malloc(sizeof(int));
 	if (!id) {
@@ -464,7 +469,7 @@ int threads_add(struct threads_manager *man, struct analysis *anal)
 		pthread_mutex_unlock(&(man->available_mutex));
 		return 1;
 	}
-	*id = new_id->id;
+	*id = val_id;
 	
 	pthread_mutex_lock(&(man->paths_mutex));
 	if (tree_insert(man->paths, anal->path, (void *)id)) {
@@ -503,13 +508,20 @@ int threads_add(struct threads_manager *man, struct analysis *anal)
 	
 	pthread_mutex_lock(&(man->analyses_mutex));
 	++man->analysis_cnt;
+	analysis_created(fd, val_id, anal);
 	pthread_mutex_unlock(&(man->analyses_mutex));
 	
 	return 0;
 }
 
 
-int threads_remove(struct threads_manager *man, const int id)
+void threads_suspend(struct threads_manager *man, const int id, int fd)
+{
+	
+}
+
+
+int threads_remove(struct threads_manager *man, const int id, int fd)
 {
 	
 	pthread_mutex_lock(&(man->analyses_mutex));

@@ -33,25 +33,25 @@ int threads_startup(struct threads_manager *man);
 int threads_read_results(struct threads_manager *man);
 
 
-int threads_add(struct threads_manager *man, struct analysis *anal);
+int threads_add(struct threads_manager *man, struct analysis *anal, int fd);
 
 
-int threads_remove(struct threads_manager *man, const int id);
+int threads_remove(struct threads_manager *man, const int id, int fd);
 
 
-int threads_suspend(struct threads_manager *man, const int id);
+void threads_suspend(struct threads_manager *man, const int id, int fd);
 
 
-int threads_resume(struct threads_manager *man, const int id);
+int threads_resume(struct threads_manager *man, const int id, int fd);
 
 
-int threads_status(const struct threads_manager man, const int id);
+int threads_status(const struct threads_manager man, const int id, int fd);
 
 
-int threads_result(const struct threads_manager man, const int id, char *result);
+int threads_result(const struct threads_manager man, const int id, char *result, int fd);
 
 
-int threads_get_all(const struct threads_manager man, char *result);
+int threads_get_all(const struct threads_manager man, char *result, int fd);
 
 
 void threads_shutdown(struct threads_manager *man);
