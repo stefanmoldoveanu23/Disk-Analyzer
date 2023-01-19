@@ -353,7 +353,11 @@ void analysis_status(int fd, int id, struct analysis *anal)
 	char buffer[sz];
 	memset(buffer, 0, sz);
 	
-	if (snprintf(buffer, sz, "Analysis task with ID \'%d\' for \'%s\' has status \'%s\'.\n", id, anal->path, (anal->status == ANALYSIS_PENDING ? "pending" : (anal->status == ANALYSIS_INPROGRESS ? "in progress" : "done"))) < 0) {
+	char status[15];
+	memset(status, 0, 15);
+	strcat(status, (anal->status == ANALYSIS_PENDING ? "pending" : (anal->suspended == ANALYSIS_SUSPENDED || anal->status == ANALYSIS_INPROGRESS ? "in progress" : "done")));
+	
+	if (snprintf(buffer, sz, "Analysis task with ID \'%d\' for \'%s\' has status \'%s\'.\n", id, anal->path, status) < 0) {
 		return;
 	}
 	

@@ -88,8 +88,12 @@ int initial_forks(struct treap *trp)
 		return 0;
 	}
 	
-	if (fork_request(trp->id, trp->anal)) {
-		return 1;
+	if (trp->anal->status != ANALYSIS_COMPLETE) {
+		if (fork_request(trp->id, trp->anal)) {
+			return 1;
+		}
+	} else {
+		trp->anal->pid = -1;
 	}
 	
 	return initial_forks(trp->chld_left) || initial_forks(trp->chld_right);
@@ -354,6 +358,7 @@ int threads_read_results(struct threads_manager *man)
 	int id, cnt_dirs, cnt_files;
 	
 	if (threads_read_results_string(man->responses_connection.client_fd, buffer, 10)) {
+		perror("Error reading id response");
 		close(man->responses_connection.client_fd);
 		return 1;
 	}
@@ -381,6 +386,10 @@ int threads_read_results(struct threads_manager *man)
 	if (treap_find(man->analyses, id, &anal)) {
 		anal->cnt_dirs += cnt_dirs;
 		anal->cnt_files += cnt_files;
+		
+		if (result == '1') {
+			anal->status = ANALYSIS_COMPLETE;
+		}
 	} else {
 		pthread_mutex_unlock(&(man->analyses_mutex));
 		close(man->responses_connection.client_fd);
@@ -518,6 +527,7 @@ int threads_add(struct threads_manager *man, struct analysis *anal, int fd)
 	
 	pthread_mutex_lock(&(man->analyses_mutex));
 	++man->analysis_cnt;
+	anal->status = ANALYSIS_INPROGRESS;
 	analysis_created(fd, val_id, anal);
 	pthread_mutex_unlock(&(man->analyses_mutex));
 	
@@ -531,7 +541,7 @@ void threads_suspend(struct threads_manager *man, const int id, int fd)
 	pthread_mutex_lock(&(man->analyses_mutex));
 	
 	if (treap_find(man->analyses, id, &anal)) {
-		if (anal->suspended != ANALYSIS_SUSPENDED && anal->status != ANALYSIS_COMPLETE && getpgid(getpid()) == getpgid(anal->pid)) {
+		if (anal->suspended != ANALYSIS_SUSPENDED && anal->status != ANALYSIS_COMPLETE && anal->pid != -1 && !kill(anal->pid, 0) && getpgid(getpid()) == getpgid(anal->pid)) {
 			kill(anal->pid, SIGTSTP);
 			anal->total_time += (time(NULL) - anal->last_start);
 			anal->suspended = ANALYSIS_SUSPENDED;
@@ -556,7 +566,7 @@ void threads_resume(struct threads_manager *man, const int id, int fd)
 	pthread_mutex_lock(&(man->analyses_mutex));
 	
 	if (treap_find(man->analyses, id, &anal)) {
-		if (anal->suspended != ANALYSIS_RESUMED && anal->status != ANALYSIS_COMPLETE && getpgid(getpid()) == getpgid(anal->pid)) {
+		if (anal->suspended != ANALYSIS_RESUMED && anal->status != ANALYSIS_COMPLETE && anal->pid != -1 && !kill(anal->pid, 0) && getpgid(getpid()) == getpgid(anal->pid)) {
 			kill(anal->pid, SIGCONT);
 			anal->last_start = time(NULL);
 			anal->suspended = ANALYSIS_RESUMED;
@@ -592,7 +602,7 @@ void threads_remove(struct threads_manager *man, const int id, int fd)
 		
 		remove(name);
 		
-		if (getpgid(getpid()) == getpgid(trp->anal->pid)) {
+		if (trp->anal->pid != -1 && !kill(trp->anal->pid, 0) && getpgid(getpid()) == getpgid(trp->anal->pid)) {
 			kill(trp->anal->pid, SIGINT);
 		}
 
@@ -612,6 +622,21 @@ void threads_remove(struct threads_manager *man, const int id, int fd)
 	} else {
 		analysis_id_no_exists(fd, id);
 	}
+}
+
+
+void threads_status(struct threads_manager man, const int id, int fd)
+{
+	pthread_mutex_lock(&(man.analyses_mutex));
+	
+	struct analysis *anal;
+	if (treap_find(man.analyses, id, &anal)) {
+		analysis_status(fd, id, anal);
+	} else {
+		analysis_id_no_exists(fd, id);
+	}
+	
+	pthread_mutex_unlock(&(man.analyses_mutex));
 }
 
 

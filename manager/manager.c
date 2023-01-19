@@ -269,6 +269,10 @@ void *request_thread(void *v)
 			threads_remove(man, tsk.id, client_fd);
 			break;
 		}
+		case 5: {
+			threads_status(*man, tsk.id, client_fd);
+			break;
+		}
 	}
 	
 	

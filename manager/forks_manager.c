@@ -95,12 +95,14 @@ int forks_add(struct forks_manager *man)
 			tree_clear(&(man->tre));
 			free(man->path);
 			return 0;
+		} else if (*(man->done)) {
+			forks_send_result(man, 2);
+		} else {
+			forks_send_result(man, 1);
 		}
-		forks_send_result(man, 1);
 	}
 	
 	forks_save(man);
-	
 	
 	return 0;
 }
@@ -207,7 +209,7 @@ int forks_send_result(struct forks_manager *man, int result)
 	char response[32];
 	
 	if (result == 0) {
-		if (snprintf(response, 32, "%c%010d", result + '0', man->id) < 0) {
+		if (snprintf(response, 32, "0%010d", man->id) < 0) {
 			return 1;
 		}
 	} else {
