@@ -259,6 +259,10 @@ void *request_thread(void *v)
 			threads_suspend(man, tsk.id, client_fd);
 			break;
 		}
+		case 3: {
+			threads_resume(man, tsk.id, client_fd);
+			break;
+		}
 	}
 	
 	
@@ -285,7 +289,6 @@ void *do_responses_manager(void *v)
 			kill(getppid(), SIGTERM);
 			break;
 		}
-		printf("Hi: %d\n", man->responses_connection.client_fd);
 		
 		if (threads_read_results(man)) {
 			perror("Error reading results");

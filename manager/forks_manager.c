@@ -258,6 +258,9 @@ int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp)
 	}
 	
 	while (1) {
+		while (!(*(man->done)) && *(man->suspended));
+		sleep(1);
+		
 		if (time(NULL) - man->last_send >= 1) {
 			forks_send_result(man, 2);
 		}

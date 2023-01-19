@@ -42,7 +42,7 @@ int threads_remove(struct threads_manager *man, const int id, int fd);
 void threads_suspend(struct threads_manager *man, const int id, int fd);
 
 
-int threads_resume(struct threads_manager *man, const int id, int fd);
+void threads_resume(struct threads_manager *man, const int id, int fd);
 
 
 int threads_status(const struct threads_manager man, const int id, int fd);

@@ -436,13 +436,16 @@ int threads_add(struct threads_manager *man, struct analysis *anal, int fd)
 	struct stat sb;
 	if (stat(anal->path, &sb) || S_ISDIR(sb.st_mode) == 0) {
 		perror("Path is not a directory.");
+		analysis_path_no_exists(fd, anal->path);
 		return 1;
 	}
 	
 	pthread_mutex_lock(&(man->paths_mutex));
-	if (tree_find_prefix(man->paths, anal->path, NULL)) {
+	int *other_id;
+	if (tree_find_prefix(man->paths, anal->path, (void**)(&other_id))) {
 		pthread_mutex_unlock(&(man->paths_mutex));
 		perror("Analysis with path already exists.");
+		analysis_path_already_exists(fd, anal->path, *other_id);
 		return 1;
 	}
 	pthread_mutex_unlock(&(man->paths_mutex));
@@ -450,8 +453,9 @@ int threads_add(struct threads_manager *man, struct analysis *anal, int fd)
 	pthread_mutex_lock(&(man->available_mutex));
 	struct treap *new_id = get_free_id(&(man->available_ids));
 	if (!new_id) {
-		perror("Could not get new id.");
 		pthread_mutex_unlock(&(man->available_mutex));
+		perror("Could not get new id.");
+		analysis_custom_message(fd, "Could not create new id. Try removing some analyses.\n");
 		return 1;
 	}
 	pthread_mutex_unlock(&(man->available_mutex));
@@ -467,6 +471,8 @@ int threads_add(struct threads_manager *man, struct analysis *anal, int fd)
 		pthread_mutex_lock(&(man->available_mutex));
 		return_id(&(man->available_ids), new_id);
 		pthread_mutex_unlock(&(man->available_mutex));
+		
+		analysis_custom_message(fd, "There was a memory allocation error. Try again.\n");
 		return 1;
 	}
 	*id = val_id;
@@ -480,6 +486,8 @@ int threads_add(struct threads_manager *man, struct analysis *anal, int fd)
 		pthread_mutex_lock(&(man->available_mutex));
 		return_id(&(man->available_ids), new_id);
 		pthread_mutex_unlock(&(man->available_mutex));
+		
+		analysis_custom_message(fd, "There was a memory allocation error. Try again.\n");
 		return 1;
 	}
 	pthread_mutex_unlock(&(man->paths_mutex));
@@ -503,6 +511,8 @@ int threads_add(struct threads_manager *man, struct analysis *anal, int fd)
 		pthread_mutex_lock(&(man->available_mutex));
 		return_id(&(man->available_ids), trp);
 		pthread_mutex_unlock(&(man->available_mutex));
+		
+		analysis_custom_message(fd, "There was an error starting the analysis process. Try again.\n");
 		return 1;
 	}
 	
@@ -517,7 +527,51 @@ int threads_add(struct threads_manager *man, struct analysis *anal, int fd)
 
 void threads_suspend(struct threads_manager *man, const int id, int fd)
 {
+	struct analysis *anal;
+	pthread_mutex_lock(&(man->analyses_mutex));
 	
+	if (treap_find(man->analyses, id, &anal)) {
+		if (anal->suspended != ANALYSIS_SUSPENDED && anal->status != ANALYSIS_COMPLETE && getpgid(getpid()) == getpgid(anal->pid)) {
+			kill(anal->pid, SIGTSTP);
+			anal->total_time += (time(NULL) - anal->last_start);
+			anal->suspended = ANALYSIS_SUSPENDED;
+			analysis_suspended(fd, id, anal);
+		} else if (anal->suspended == ANALYSIS_SUSPENDED) {
+			analysis_already_suspended(fd, id, anal);
+		} else {
+			analysis_already_done(fd, id, anal);
+		}
+		
+	} else {
+		analysis_id_no_exists(fd, id);
+	}
+	
+	pthread_mutex_unlock(&(man->analyses_mutex));
+}
+
+
+void threads_resume(struct threads_manager *man, const int id, int fd)
+{
+	struct analysis *anal;
+	pthread_mutex_lock(&(man->analyses_mutex));
+	
+	if (treap_find(man->analyses, id, &anal)) {
+		if (anal->suspended != ANALYSIS_RESUMED && anal->status != ANALYSIS_COMPLETE && getpgid(getpid()) == getpgid(anal->pid)) {
+			kill(anal->pid, SIGCONT);
+			anal->last_start = time(NULL);
+			anal->suspended = ANALYSIS_RESUMED;
+			analysis_resumed(fd, id, anal);
+		} else if (anal->suspended == ANALYSIS_RESUMED) {
+			analysis_already_resumed(fd, id, anal);
+		} else {
+			analysis_already_done(fd, id, anal);
+		}
+		
+	} else {
+		analysis_id_no_exists(fd, id);
+	}
+	
+	pthread_mutex_unlock(&(man->analyses_mutex));
 }
 
 

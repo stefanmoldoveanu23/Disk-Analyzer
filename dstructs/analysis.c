@@ -176,6 +176,10 @@ int analysis_write(const int id, const struct analysis *anal, int fd)
 
 void analysis_custom_message(int fd, char *msg)
 {
+	if (fd < 0) {
+		return;
+	}
+	
 	int sz = 11 + strlen(msg);
 	char buffer[sz];
 	memset(buffer, 0, sz);
@@ -210,6 +214,20 @@ void analysis_created(int fd, int id, struct analysis *anal)
 	memset(buffer, 0, sz);
 	
 	if (snprintf(buffer, sz, "Created analysis task with ID \'%d\' for \'%s\' and priority \'%s\'.\n", id, anal->path, (anal->priority == 1 ? "low" : (anal->priority == 2 ? "normal" : "high"))) < 0) {
+		return;
+	}
+	
+	analysis_custom_message(fd, buffer);
+}
+
+
+void analysis_path_no_exists(int fd, char *path)
+{
+	int sz = strlen(path) + 150;
+	char buffer[sz];
+	memset(buffer, 0, sz);
+	
+	if (snprintf(buffer, sz, "There is no directory at \'%s\'.\n", path) < 0) {
 		return;
 	}
 	
@@ -252,6 +270,48 @@ void analysis_suspended(int fd, int id, struct analysis *anal)
 	memset(buffer, 0, sz);
 	
 	if (snprintf(buffer, sz, "Suspended analysis task with ID \'%d\' for \'%s\'.\n", id, anal->path) < 0) {
+		return;
+	}
+	
+	analysis_custom_message(fd, buffer);
+}
+
+
+void analysis_already_done(int fd, int id, struct analysis *anal)
+{
+	int sz = strlen(anal->path) + 150;
+	char buffer[sz];
+	memset(buffer, 0, sz);
+	
+	if (snprintf(buffer, sz, "Analysis task with ID \'%d\' for \'%s\' is already done.\n", id, anal->path) < 0) {
+		return;
+	}
+	
+	analysis_custom_message(fd, buffer);
+}
+
+
+void analysis_already_suspended(int fd, int id, struct analysis *anal)
+{
+	int sz = strlen(anal->path) + 150;
+	char buffer[sz];
+	memset(buffer, 0, sz);
+	
+	if (snprintf(buffer, sz, "Analysis task with ID \'%d\' for \'%s\' has already been suspended.\n", id, anal->path) < 0) {
+		return;
+	}
+	
+	analysis_custom_message(fd, buffer);
+}
+
+
+void analysis_already_resumed(int fd, int id, struct analysis *anal)
+{
+	int sz = strlen(anal->path) + 150;
+	char buffer[sz];
+	memset(buffer, 0, sz);
+	
+	if (snprintf(buffer, sz, "Analysis task with ID \'%d\' for \'%s\' has already been resumed.\n", id, anal->path) < 0) {
 		return;
 	}
 	

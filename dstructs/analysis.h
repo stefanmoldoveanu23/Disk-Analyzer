@@ -42,9 +42,17 @@ void analysis_custom_message(int fd, char *msg);
 
 void analysis_created(int fd, int id, struct analysis *anal);
 
+void analysis_path_no_exists(int fd, char *path);
+
 void analysis_path_already_exists(int fd, char *path, int id);
 
 void analysis_id_no_exists(int fd, int id);
+
+void analysis_already_done(int fd, int id, struct analysis *anal);
+
+void analysis_already_suspended(int fd, int id, struct analysis *anal);
+
+void analysis_already_resumed(int fd, int id, struct analysis *anal);
 
 void analysis_suspended(int fd, int id, struct analysis *anal);
 
