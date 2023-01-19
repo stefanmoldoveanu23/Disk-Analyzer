@@ -273,6 +273,9 @@ void *request_thread(void *v)
 			threads_status(*man, tsk.id, client_fd);
 			break;
 		}
+		case 6: {
+			threads_get_all(*man, client_fd);
+		}
 	}
 	
 	

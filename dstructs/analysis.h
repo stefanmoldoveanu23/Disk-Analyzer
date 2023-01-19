@@ -37,7 +37,7 @@ int analysis_write(const int id, const struct analysis *anal, int fd);
 
 
 // messages to send to user
-void analysis_custom_message(int fd, char *msg);
+int analysis_custom_message(int fd, char *msg);
 
 
 void analysis_created(int fd, int id, struct analysis *anal);
@@ -62,7 +62,7 @@ void analysis_removed(int fd, int id, struct analysis *anal);
 
 void analysis_status(int fd, int id, struct analysis *anal);
 
-void analysis_list(int fd, int id, struct analysis *anal);
+int analysis_list(int fd, int id, struct analysis *anal);
 
 void analysis_report(int in_fd, int id);
 

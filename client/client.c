@@ -13,6 +13,21 @@
 
 #define PORT 8080
 
+int client_read_string(int fd, char *buffer, int sz)
+{
+	int left = sz;
+	while (left) {
+		int cnt = read(fd, buffer + sz - left, left);
+		if (cnt < 0) {
+			return 1;
+		}
+		
+		left -= cnt;
+	}
+	
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	daemon(1, 1);
@@ -69,38 +84,43 @@ int main(int argc, char *argv[])
 	
 	free(request);
 	
-	char buffer[11];
-	memset(buffer, 0, 11);
-	
-	int left = 10;
-	while (left) {
-		int cnt = read(connection.client_fd, buffer + 10 - left, left);
-		if (cnt < 0) {
-			perror("Error reading response");
-			break;
+	if (tsk.cnt != 6) {
+		char buffer[11];
+		memset(buffer, 0, 11);
+		
+		if (!client_read_string(connection.client_fd, buffer, 10)) {
+			int sz = atoi(buffer);
+			char response[sz + 1];
+			memset(response, 0, sz + 1);
+			
+			if (!client_read_string(connection.client_fd, response, sz)) {
+				printf("%s", response);
+			}
 		}
+	} else {
+		printf("\n   ID\tPRI\t     Path\t      Time Elapsed\t            Status\t      Details\n");
+
+		char cntbuf[11];
+		memset(cntbuf, 0, 11);
 		
-		left -= cnt;
-	}
-	
-	if (!left) {
-		int sz = atoi(buffer);
-		char response[sz + 1];
-		memset(response, 0, sz + 1);
-		
-		left = sz;
-		while (left) {
-			int cnt = read(connection.client_fd, response + sz - left, left);
-			if (cnt < 0) {
-				perror("Error reading response");
-				break;
+		if (!client_read_string(connection.client_fd, cntbuf, 10)) {
+			int cnt = atoi(cntbuf);
+			
+			while (cnt--) {
+				char szbuf[11];
+				memset(szbuf, 0, 11);
+
+				if (!client_read_string(connection.client_fd, szbuf, 10)) {
+					int sz = atoi(szbuf);
+					char buffer[sz + 1];
+					memset(buffer, 0, sz + 1);
+
+					if (!client_read_string(connection.client_fd, buffer, sz)) {
+						printf("%s", buffer);
+					}
+				}
 			}
 			
-			left -= cnt;
-		}
-		
-		if (!left) {
-			printf("%s", response);
 		}
 	}
 	

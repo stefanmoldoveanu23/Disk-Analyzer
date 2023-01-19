@@ -174,17 +174,17 @@ int analysis_write(const int id, const struct analysis *anal, int fd)
 
 
 
-void analysis_custom_message(int fd, char *msg)
+int analysis_custom_message(int fd, char *msg)
 {
 	if (fd < 0) {
-		return;
+		return 0;
 	}
 	
 	int sz = 11 + strlen(msg);
 	char buffer[sz];
 	memset(buffer, 0, sz);
 	if (snprintf(buffer, sz, "%010d%s", (int)strlen(msg), msg) < 0) {
-		return;
+		return 1;
 	}
 	
 	sz = strlen(buffer);
@@ -200,10 +200,10 @@ void analysis_custom_message(int fd, char *msg)
 	
 	if (left) {
 		perror("Error sending message");
-		return;
+		return 1;
 	}
 	
-	return;
+	return 0;
 }
 
 
@@ -365,7 +365,7 @@ void analysis_status(int fd, int id, struct analysis *anal)
 }
 
 
-void analysis_list(int fd, int id, struct analysis *anal)
+int analysis_list(int fd, int id, struct analysis *anal)
 {
 	int sz = strlen(anal->path) + 150;
 	char buffer[sz];
@@ -377,17 +377,17 @@ void analysis_list(int fd, int id, struct analysis *anal)
 	
 	char status[15];
 	memset(status, 0, 15);
-	strcat(status, (anal->status == ANALYSIS_PENDING ? "pending" : (anal->status == ANALYSIS_INPROGRESS ? "in progress" : "done")));
+	strcat(status, (anal->status == ANALYSIS_PENDING ? "pending" : (anal->suspended == ANALYSIS_SUSPENDED || anal->status == ANALYSIS_INPROGRESS ? "in progress" : "done")));
 	
-	int total_time = anal->total_time + (anal->status != ANALYSIS_COMPLETE && anal->suspended != ANALYSIS_SUSPENDED) * (time(NULL) - anal->last_start);
+	int total_time = anal->total_time + (anal->status != ANALYSIS_COMPLETE && anal->suspended != ANALYSIS_SUSPENDED ? time(NULL) - anal->last_start : 0);
 	int min = total_time / 60;
 	int sec = total_time % 60;
 	
 	if (snprintf(buffer, sz, "%5d\t%3s\t%s\t%5dm %2ds\t%15s\t%d files, %d dirs\n", id, prio, anal->path, min, sec, status, anal->cnt_files, anal->cnt_dirs) < 0) {
-		return;
+		return 1;
 	}
 	
-	analysis_custom_message(fd, buffer);
+	return analysis_custom_message(fd, buffer);
 }
 
 void analysis_report(int out_fd, int id)

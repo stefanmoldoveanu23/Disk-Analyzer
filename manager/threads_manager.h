@@ -51,7 +51,7 @@ void threads_status(struct threads_manager man, const int id, int fd);
 int threads_result(struct threads_manager man, const int id, char *result, int fd);
 
 
-int threads_get_all(struct threads_manager man, char *result, int fd);
+void threads_get_all(struct threads_manager man, int fd);
 
 
 void threads_shutdown(struct threads_manager *man);

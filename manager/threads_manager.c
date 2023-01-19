@@ -92,6 +92,7 @@ int initial_forks(struct treap *trp)
 		if (fork_request(trp->id, trp->anal)) {
 			return 1;
 		}
+		trp->anal->last_start = time(NULL);
 	} else {
 		trp->anal->pid = -1;
 	}
@@ -390,6 +391,7 @@ int threads_read_results(struct threads_manager *man)
 		
 		if (result == '1') {
 			anal->status = ANALYSIS_COMPLETE;
+			anal->total_time += (time(NULL) - anal->last_start);
 		}
 	} else {
 		pthread_mutex_unlock(&(man->analyses_mutex));
@@ -641,6 +643,55 @@ void threads_status(struct threads_manager man, const int id, int fd)
 		analysis_status(fd, id, anal);
 	} else {
 		analysis_id_no_exists(fd, id);
+	}
+	
+	pthread_mutex_unlock(&(man.analyses_mutex));
+}
+
+
+int threads_show_in_order(struct treap *trp, int fd)
+{
+	if (!trp) {
+		return 0;
+	}
+	
+	if (threads_show_in_order(trp->chld_left, fd)) {
+		return 1;
+	}
+	
+	if (analysis_list(fd, trp->id, trp->anal)) {
+		return 1;
+	}
+	
+	return threads_show_in_order(trp->chld_right, fd);
+}
+
+
+void threads_get_all(struct threads_manager man, int fd)
+{
+	pthread_mutex_lock(&(man.analyses_mutex));
+	
+	int good = 1;
+	
+	char cntbuf[11];
+	memset(cntbuf, 0, 11);
+	if (snprintf(cntbuf, 11, "%010d", man.analysis_cnt) < 0) {
+		good = 0;
+		memset(cntbuf, 0, 11);
+	}
+
+	int left = 10, sz = 10;
+	while (left) {
+		int cnt = send(fd, cntbuf + sz - left, left, 0);
+		if (cnt < 0) {
+			break;
+		}
+		
+		left -= cnt;
+	}
+	
+	if (good && !left) {
+		threads_show_in_order(man.analyses, fd);
 	}
 	
 	pthread_mutex_unlock(&(man.analyses_mutex));
