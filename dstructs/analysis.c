@@ -12,7 +12,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#define DIR_PATH "../data/"
+#define DIR_PATH "/var/lib/disk-analyzer/"
 
 
 int read_string_by_size(char **ret, int sz, int fd)
@@ -391,7 +391,7 @@ int analysis_list(int fd, int id, struct analysis *anal)
 
 void analysis_report(int fd, int id)
 {
-	int sz = 30;
+	int sz = 50;
 	char buffer[sz];
 	memset(buffer, 0, sz);
 	if (snprintf(buffer, sz, "%s%d", DIR_PATH, id) < 0) {

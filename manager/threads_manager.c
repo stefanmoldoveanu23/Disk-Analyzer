@@ -19,8 +19,8 @@
 #define PORT_REQUEST 8081
 #define PORT_ACCEPTOR_RESPONSES 8082
 
-#define ANALYSES_PATH "../data/analyses"
-#define DIR_PATH "../data/"
+#define ANALYSES_PATH "/var/lib/disk-analyzer/analyses"
+#define DIR_PATH "/var/lib/disk-analyzer/"
 
 
 int fork_request(int id, struct analysis *anal)
@@ -605,9 +605,9 @@ void threads_remove(struct threads_manager *man, const int id, int fd)
 	pthread_mutex_unlock(&(man->analyses_mutex));
 	
 	if (trp) {
-		char name[20];
+		char name[40];
 		memset(name, 0, 20);
-		snprintf(name, 20, "%s%d", DIR_PATH, id);
+		snprintf(name, 40, "%s%d", DIR_PATH, id);
 		
 		remove(name);
 		

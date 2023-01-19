@@ -14,7 +14,7 @@
 
 #define PORT_ACCEPTOR 8081
 #define PORT_RESPONSE 8082
-#define DIR_PATH "../data/"
+#define DIR_PATH "/var/lib/disk-analyzer/"
 
 
 int forks_startup(struct forks_manager *man)
