@@ -46,6 +46,7 @@ int create_socket_connector(struct socket_connection *connection, const int port
 {
 	connection->client_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (connection->client_fd < 0) {
+		perror("Error creating client");
 		return 1;
 	}
 	

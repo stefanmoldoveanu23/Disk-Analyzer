@@ -1,1 +1,174 @@
-00+0000000004home0+0000000011characterme0+0000000013Disk-Analyzer0+0000000007manager110000274441-----
+1
+Path	Usage	Size	Amount
+/home/characterme/Disk-Analyzer	100%	3.91MB	##################################################
+|
+|-/data/ 0.20% 8.15KB 
+|
+|-/client/ 3.47% 139.04KB #
+|-/client/hiii/ 0.20% 8.00KB 
+|
+|-/setup/ 0.64% 25.49KB 
+|
+|-/dstructs/ 0.95% 38.16KB 
+|
+|-/.git/ 87.19% 3.41MB ###########################################
+|-/.git/hooks/ 0.66% 26.57KB 
+|-/.git/info/ 0.21% 8.23KB 
+|-/.git/logs/ 1.21% 48.56KB 
+|-/.git/logs/refs/ 0.93% 37.37KB 
+|-/.git/logs/refs/remotes/ 0.46% 18.50KB 
+|-/.git/logs/refs/remotes/origin/ 0.26% 10.50KB 
+|-/.git/logs/refs/heads/ 0.27% 10.87KB 
+|-/.git/refs/ 1.00% 40.11KB 
+|-/.git/refs/remotes/ 0.40% 16.07KB 
+|-/.git/refs/remotes/origin/ 0.20% 8.07KB 
+|-/.git/refs/heads/ 0.20% 8.04KB 
+|-/.git/refs/tags/ 0.20% 8.00KB 
+|-/.git/objects/ 83.62% 3.27MB #########################################
+|-/.git/objects/20/ 1.42% 56.93KB 
+|-/.git/objects/7e/ 0.20% 8.08KB 
+|-/.git/objects/f6/ 0.21% 8.39KB 
+|-/.git/objects/75/ 2.42% 96.70KB #
+|-/.git/objects/10/ 1.40% 56.01KB 
+|-/.git/objects/6e/ 0.21% 8.35KB 
+|-/.git/objects/65/ 0.26% 10.31KB 
+|-/.git/objects/00/ 0.21% 8.27KB 
+|-/.git/objects/9c/ 1.43% 57.34KB 
+|-/.git/objects/cf/ 2.15% 85.93KB #
+|-/.git/objects/17/ 0.21% 8.28KB 
+|-/.git/objects/55/ 0.25% 9.92KB 
+|-/.git/objects/93/ 2.46% 98.61KB #
+|-/.git/objects/8c/ 0.20% 8.05KB 
+|-/.git/objects/c6/ 0.23% 9.06KB 
+|-/.git/objects/bf/ 0.20% 8.20KB 
+|-/.git/objects/07/ 0.20% 8.08KB 
+|-/.git/objects/45/ 0.30% 11.84KB 
+|-/.git/objects/3e/ 0.24% 9.56KB 
+|-/.git/objects/f4/ 2.24% 89.63KB #
+|-/.git/objects/ed/ 2.29% 91.72KB #
+|-/.git/objects/35/ 0.23% 9.07KB 
+|-/.git/objects/25/ 2.51% 100.51KB #
+|-/.git/objects/1e/ 0.20% 8.11KB 
+|-/.git/objects/d4/ 0.25% 10.07KB 
+|-/.git/objects/15/ 0.20% 8.11KB 
+|-/.git/objects/53/ 0.21% 8.53KB 
+|-/.git/objects/91/ 0.22% 9.00KB 
+|-/.git/objects/4c/ 0.23% 9.05KB 
+|-/.git/objects/8a/ 0.21% 8.35KB 
+|-/.git/objects/bd/ 0.20% 8.18KB 
+|-/.git/objects/05/ 0.31% 12.35KB 
+|-/.git/objects/43/ 0.21% 8.33KB 
+|-/.git/objects/3c/ 0.24% 9.55KB 
+|-/.git/objects/ad/ 0.25% 10.05KB 
+|-/.git/objects/98/ 0.27% 10.66KB 
+|-/.git/objects/33/ 0.21% 8.24KB 
+|-/.git/objects/6a/ 0.22% 8.70KB 
+|-/.git/objects/e2/ 0.21% 8.33KB 
+|-/.git/objects/db/ 0.20% 8.07KB 
+|-/.git/objects/88/ 0.20% 8.15KB 
+|-/.git/objects/23/ 0.21% 8.33KB 
+|-/.git/objects/61/ 0.20% 8.12KB 
+|-/.git/objects/5a/ 0.20% 8.19KB 
+|-/.git/objects/f9/ 0.26% 10.59KB 
+|-/.git/objects/d2/ 0.20% 8.14KB 
+|-/.git/objects/78/ 0.21% 8.29KB 
+|-/.git/objects/51/ 2.55% 102.02KB #
+|-/.git/objects/0c/ 2.45% 97.98KB #
+|-/.git/objects/c2/ 0.20% 8.17KB 
+|-/.git/objects/bb/ 0.23% 9.06KB 
+|-/.git/objects/41/ 2.21% 88.65KB #
+|-/.git/objects/d9/ 0.23% 9.32KB 
+|-/.git/objects/58/ 0.20% 8.12KB 
+|-/.git/objects/2a/ 0.21% 8.33KB 
+|-/.git/objects/a2/ 0.27% 10.65KB 
+|-/.git/objects/48/ 0.30% 11.82KB 
+|-/.git/objects/7f/ 0.21% 8.33KB 
+|-/.git/objects/1a/ 0.22% 8.74KB 
+|-/.git/objects/f7/ 0.23% 9.12KB 
+|-/.git/objects/76/ 0.20% 8.07KB 
+|-/.git/objects/11/ 0.20% 8.15KB 
+|-/.git/objects/6f/ 0.21% 8.25KB 
+|-/.git/objects/0a/ 0.20% 8.17KB 
+|-/.git/objects/a9/ 0.20% 8.19KB 
+|-/.git/objects/e7/ 0.20% 8.15KB 
+|-/.git/objects/info/ 0.20% 8.00KB 
+|-/.git/objects/28/ 0.21% 8.47KB 
+|-/.git/objects/01/ 0.27% 10.70KB 
+|-/.git/objects/b0/ 0.30% 11.96KB 
+|-/.git/objects/18/ 0.21% 8.24KB 
+|-/.git/objects/56/ 0.20% 8.20KB 
+|-/.git/objects/94/ 0.21% 8.39KB 
+|-/.git/objects/8d/ 0.21% 8.33KB 
+|-/.git/objects/46/ 0.21% 8.40KB 
+|-/.git/objects/84/ 0.20% 8.18KB 
+|-/.git/objects/7d/ 0.24% 9.78KB 
+|-/.git/objects/f5/ 0.21% 8.35KB 
+|-/.git/objects/ee/ 0.26% 10.54KB 
+|-/.git/objects/a7/ 0.20% 8.14KB 
+|-/.git/objects/e5/ 0.20% 8.15KB 
+|-/.git/objects/64/ 0.27% 10.78KB 
+|-/.git/objects/1f/ 0.27% 10.63KB 
+|-/.git/objects/9b/ 2.16% 86.58KB #
+|-/.git/objects/d5/ 0.25% 9.81KB 
+|-/.git/objects/54/ 0.21% 8.33KB 
+|-/.git/objects/92/ 0.21% 8.33KB 
+|-/.git/objects/0f/ 0.26% 10.30KB 
+|-/.git/objects/4d/ 0.21% 8.41KB 
+|-/.git/objects/c5/ 0.25% 9.91KB 
+|-/.git/objects/pack/ 15.36% 615.12KB #######
+|-/.git/objects/be/ 0.22% 8.67KB 
+|-/.git/objects/fc/ 2.26% 90.42KB #
+|-/.git/objects/44/ 0.25% 9.86KB 
+|-/.git/objects/82/ 0.20% 8.12KB 
+|-/.git/objects/b5/ 0.35% 14.02KB 
+|-/.git/objects/f3/ 0.21% 8.32KB 
+|-/.git/objects/ae/ 0.25% 9.91KB 
+|-/.git/objects/99/ 0.21% 8.24KB 
+|-/.git/objects/34/ 0.20% 8.16KB 
+|-/.git/objects/2d/ 2.29% 91.69KB #
+|-/.git/objects/a5/ 0.23% 9.15KB 
+|-/.git/objects/e3/ 0.22% 8.69KB 
+|-/.git/objects/dc/ 2.46% 98.66KB #
+|-/.git/objects/24/ 0.22% 8.74KB 
+|-/.git/objects/1d/ 0.20% 8.18KB 
+|-/.git/objects/d3/ 0.20% 8.14KB 
+|-/.git/objects/cc/ 0.20% 8.10KB 
+|-/.git/objects/79/ 0.20% 8.15KB 
+|-/.git/objects/c3/ 0.30% 11.92KB 
+|-/.git/objects/bc/ 0.21% 8.39KB 
+|-/.git/objects/69/ 0.22% 8.97KB 
+|-/.git/objects/42/ 0.20% 8.17KB 
+|-/.git/objects/80/ 0.20% 8.15KB 
+|-/.git/objects/3b/ 0.21% 8.28KB 
+|-/.git/objects/b3/ 0.20% 8.17KB 
+|-/.git/objects/f1/ 0.21% 8.40KB 
+|-/.git/objects/ac/ 0.21% 8.32KB 
+|-/.git/objects/59/ 0.26% 10.24KB 
+|-/.git/objects/32/ 0.21% 8.51KB 
+|-/.git/objects/70/ 0.22% 8.85KB 
+|-/.git/objects/a3/ 0.21% 8.33KB 
+|-/.git/objects/da/ 0.21% 8.24KB 
+|-/.git/objects/87/ 0.34% 13.66KB 
+|-/.git/objects/22/ 0.20% 8.16KB 
+|-/.git/objects/1b/ 0.21% 8.46KB 
+|-/.git/objects/f8/ 0.21% 8.34KB 
+|-/.git/objects/ca/ 0.30% 11.89KB 
+|-/.git/objects/39/ 0.26% 10.49KB 
+|-/.git/objects/50/ 0.20% 8.16KB 
+|-/.git/objects/c1/ 2.20% 88.02KB #
+|-/.git/objects/ba/ 0.21% 8.31KB 
+|-/.git/objects/29/ 0.30% 12.18KB 
+|-/.git/objects/40/ 0.21% 8.45KB 
+|-/.git/objects/9e/ 0.24% 9.44KB 
+|-/.git/objects/d8/ 0.24% 9.69KB 
+|-/.git/objects/b1/ 2.28% 91.43KB #
+|-/.git/objects/aa/ 1.41% 56.60KB 
+|-/.git/objects/57/ 0.21% 8.24KB 
+|-/.git/objects/95/ 0.21% 8.33KB 
+|-/.git/objects/8e/ 0.21% 8.53KB 
+|-/.git/objects/ff/ 0.25% 9.82KB 
+|-/.git/branches/ 0.20% 8.00KB 
+|
+|-/manager/ 6.78% 271.42KB ###
+|
+|-/socket/ 0.29% 11.60KB 

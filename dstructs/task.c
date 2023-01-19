@@ -8,7 +8,8 @@
 int appendInt(const int src, char *dest)
 {
 	char *start = dest + strlen(dest);
-	return snprintf(start, 5, "%.04d", src);
+	
+	return snprintf(start, 5, "%04d", src);
 }
 
 int appendString(const char *src, char *dest)
@@ -26,8 +27,8 @@ int taskToString(const struct task src, char **dest)
 {
 	switch (src.cnt) {
 		case 6: {
-			*dest = (char *)malloc(4);
-			memset(*dest, '\0', 4);
+			*dest = (char *)malloc(5);
+			memset(*dest, '\0', 5);
 			if (!(*dest)) {
 				return -1;
 			}
@@ -40,8 +41,8 @@ int taskToString(const struct task src, char **dest)
 			break;
 		}
 		case 1: {
-			*dest = (char *)malloc(4 + 4 + 4 + 4 + strlen(src.path));
-			memset(*dest, '\0', 4 + 4 + 4 + 4 + strlen(src.path));
+			*dest = (char *)malloc(4 + 4 + 4 + 4 + strlen(src.path) + 1);
+			memset(*dest, '\0', 4 + 4 + 4 + 4 + strlen(src.path) + 1);
 			
 			if (!(*dest)) {
 				return -1;
@@ -65,8 +66,8 @@ int taskToString(const struct task src, char **dest)
 			break;
 		}
 		default: {
-			*dest = (char *)malloc(4 + 4);
-			memset(*dest, '\0', 4 + 4);
+			*dest = (char *)malloc(4 + 4 + 1);
+			memset(*dest, '\0', 4 + 4 + 1);
 			
 			if (!(*dest)) {
 				return -1;

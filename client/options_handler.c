@@ -74,7 +74,6 @@ int get_task(const int argc, char **argv, struct task *tsk)
 	
 	int opt_2 = getopt_long(argc, argv, options, long_options, NULL);
 	if (errno) {
-		printf("Hiiii");
 		return -1;
 	}
 	

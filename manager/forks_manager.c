@@ -90,6 +90,9 @@ int forks_add(struct forks_manager *man)
 	
 	if (forks_solve(man)) {
 		forks_send_result(man, 0);
+		tree_clear(&(man->tre));
+		free(man->path);
+		return 0;
 	} else {
 		if (*(man->interrupted)) {
 			tree_clear(&(man->tre));
@@ -102,7 +105,11 @@ int forks_add(struct forks_manager *man)
 		}
 	}
 	
-	forks_save(man);
+	if (!(*(man->done))) {
+		forks_write(man);
+	} else {
+		forks_save(man);
+	}
 	
 	return 0;
 }
@@ -270,7 +277,6 @@ int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp)
 		}
 		
 		while (!(*(man->interrupted)) && !(*(man->done)) && *(man->suspended));
-		sleep(1);
 		
 		if (time(NULL) - man->last_send >= 1) {
 			forks_send_result(man, 2);
@@ -401,10 +407,15 @@ int forks_solve(struct forks_manager *man)
 void forks_save(struct forks_manager *man)
 {
 	char filepath[PATH_MAX];
-	memset(filepath, '\0', PATH_MAX);
+	memset(filepath, 0, PATH_MAX);
 	
-	snprintf(filepath, 8 + strlen(man->path) + 1, "%s%d", DIR_PATH, man->id);
-	int fd = open(filepath, O_WRONLY);
+	if (snprintf(filepath, 8 + strlen(man->path) + 1, "%s%d", DIR_PATH, man->id) < 0) {
+		tree_clear(&(man->tre));
+		free(man->path);
+		return;
+	}
+
+	int fd = open(filepath, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
 	if (fd == -1) {
 		tree_clear(&(man->tre));
 		free(man->path);
@@ -414,6 +425,70 @@ void forks_save(struct forks_manager *man)
 	write(fd, "0", 1);
 	
 	tree_save(&(man->tre), fd);
+	free(man->path);
+	
+	close(fd);
+}
+
+
+void forks_write(struct forks_manager *man)
+{
+	char filepath[PATH_MAX];
+	memset(filepath, 0, PATH_MAX);
+	
+	if (snprintf(filepath, 8 + strlen(man->path) + 1, "%s%d", DIR_PATH, man->id) < 0) {
+		tree_clear(&(man->tre));
+		free(man->path);
+		return;
+	}
+	
+	int fd = open(filepath, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+	if (fd == -1) {
+		tree_clear(&(man->tre));
+		free(man->path);
+		return;
+	}
+	
+	write(fd, "1", 1);
+	write(fd, "\nPath\tUsage\tSize\tAmount\n", 24);
+	write(fd, man->path, strlen(man->path));
+	
+	struct tree *tre = man->tre;
+	while (!(tre->info)) {
+		for (int i = 0; i < HASH_MOD; ++i) {
+			if (tre->hsh.children[i]) {
+				tre = tre->hsh.children[i]->node;
+				break;
+			}
+		}
+	}
+	
+	char percbuf[51];
+	memset(percbuf, '#', 51);
+	percbuf[50] = '\0';
+	
+	char buf[150];
+	memset(buf, 0, 150);
+	
+	float total = (float)(((struct state *)(tre->info))->size);
+	
+	if (total < (1 << 10)) {
+		snprintf(buf, 150, "\t100%%\t%.2fB\t%s\n", total, percbuf);
+	} else if (total < (1 << 20)) {
+		snprintf(buf, 150, "\t100%%\t%.2fKB\t%s\n", total / (1 << 10), percbuf);
+	} else {
+		snprintf(buf, 150, "\t100%%\t%.2fMB\t%s\n", total / (1 << 20), percbuf);
+	}
+	
+	write(fd, buf, strlen(buf));
+	
+	char path[PATH_MAX];
+	memset(path, 0, PATH_MAX);
+	path[0] = '/';
+	
+	tree_write(tre, fd, path, 1, total);
+	
+	tree_clear(&(man->tre));
 	free(man->path);
 	
 	close(fd);

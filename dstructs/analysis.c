@@ -10,7 +10,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/socket.h>
-#include <sys/sendfile.h>
 #include <unistd.h>
 
 #define DIR_PATH "../data/"
@@ -390,9 +389,9 @@ int analysis_list(int fd, int id, struct analysis *anal)
 	return analysis_custom_message(fd, buffer);
 }
 
-void analysis_report(int out_fd, int id)
+void analysis_report(int fd, int id)
 {
-	int sz = 20;
+	int sz = 30;
 	char buffer[sz];
 	memset(buffer, 0, sz);
 	if (snprintf(buffer, sz, "%s%d", DIR_PATH, id) < 0) {
@@ -400,22 +399,19 @@ void analysis_report(int out_fd, int id)
 		return;
 	}
 	
-	int in_fd = open(buffer, O_RDONLY);
-	if (in_fd < 0) {
-		perror("Error opening input file");
+	analysis_custom_message(fd, buffer);
+	
+}
+
+void analysis_not_done(int fd, int id, struct analysis *anal)
+{
+	int sz = strlen(anal->path) + 150;
+	char buffer[sz];
+	memset(buffer, 0, sz);
+	
+	if (snprintf(buffer, sz, "Analysis task with ID \'%d\' for \'%s\' is not done yet.\n", id, anal->path) < 0) {
 		return;
 	}
 	
-	struct stat in_stat;
-	if (fstat(in_fd, &in_stat)) {
-		perror("Error reading stats of file");
-		return;
-	}
-	
-	off_t offset = 0;
-	if (sendfile(out_fd, in_fd, &offset, in_stat.st_size) != in_stat.st_size) {
-		perror("Error sending contents to client");
-		return;
-	}
-	
+	analysis_custom_message(fd, buffer);
 }

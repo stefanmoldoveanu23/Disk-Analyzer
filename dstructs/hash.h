@@ -40,6 +40,9 @@ void list_clear(struct list **lst);
 void list_save(struct list **lst, int fd);
 
 
+void list_write(struct list *lst, int fd, char *path, int pos, int total);
+
+
 struct tree *hash_insert(struct hash *hsh, char *path);
 
 
@@ -56,6 +59,9 @@ void hash_clear(struct hash *hsh);
 
 
 void hash_save(struct hash *hsh, int fd);
+
+
+void hash_write(struct hash hsh, int fd, char *path, int pos, int total);
 
 
 #endif

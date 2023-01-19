@@ -64,6 +64,8 @@ void analysis_status(int fd, int id, struct analysis *anal);
 
 int analysis_list(int fd, int id, struct analysis *anal);
 
-void analysis_report(int in_fd, int id);
+void analysis_report(int fd, int id);
+
+void analysis_not_done(int fd, int id, struct analysis *anal);
 
 #endif

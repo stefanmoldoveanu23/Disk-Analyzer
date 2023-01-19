@@ -275,6 +275,11 @@ void *request_thread(void *v)
 		}
 		case 6: {
 			threads_get_all(*man, client_fd);
+			break;
+		}
+		case 7: {
+			threads_result(*man, tsk.id, client_fd);
+			break;
 		}
 	}
 	

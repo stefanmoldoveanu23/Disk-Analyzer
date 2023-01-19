@@ -5,8 +5,10 @@
 #include <unistd.h>
 #include <limits.h>
 
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/sendfile.h>
 
 #include "options_handler.h"
 #include "../dstructs/create_socket.h"
@@ -48,7 +50,9 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	
-	free(tsk.path);
+	if (tsk.cnt == 1) {
+		free(tsk.path);
+	}
 	
 	struct socket_connection connection;
 	if (create_socket_connector(&connection, PORT)) {
@@ -84,7 +88,7 @@ int main(int argc, char *argv[])
 	
 	free(request);
 	
-	if (tsk.cnt != 6) {
+	if (tsk.cnt < 6) {
 		char buffer[11];
 		memset(buffer, 0, 11);
 		
@@ -97,7 +101,7 @@ int main(int argc, char *argv[])
 				printf("%s", response);
 			}
 		}
-	} else {
+	} else if (tsk.cnt == 6) {
 		printf("\n   ID\tPRI\t     Path\t      Time Elapsed\t            Status\t      Details\n");
 
 		char cntbuf[11];
@@ -121,6 +125,73 @@ int main(int argc, char *argv[])
 				}
 			}
 			
+		}
+	} else {
+		char sol;
+		int rd = 0;
+		while (!rd) {
+			rd = read(connection.client_fd, &sol, 1);
+		}
+		
+		printf("%d\n", rd);
+		
+		if (rd < 0) {
+			perror(NULL);
+			close(connection.server_fd);
+			shutdown(connection.client_fd, SHUT_RDWR);
+			
+			return 0;
+		}
+		
+		char szbuf[11];
+		memset(szbuf, 0, 11);
+		
+		if (!client_read_string(connection.client_fd, szbuf, 10)) {
+			int sz = atoi(szbuf);
+			char bufin[sz + 1];
+			memset(bufin, 0, sz + 1);
+			
+			if (!client_read_string(connection.client_fd, bufin, sz)) {
+				if (sol == '1') {
+					int in_fd = open(bufin, O_RDONLY);
+					if (in_fd < 0) {
+						perror(NULL);
+					}
+					if (in_fd >= 0) {
+						struct stat in_stat;
+						if (!fstat(in_fd, &in_stat)) {
+							char dump;
+							int rd = 0;
+							while (!rd) {
+								rd = read(in_fd, &dump, 1);
+							}
+							
+							if (rd == 1 && dump == '1') {
+								char buffer[101];
+								
+								while (1) {
+									memset(buffer, 0, 101);
+									rd = read(in_fd, buffer, 100);
+									if (rd < 0) {
+										perror(NULL);
+										break;
+									}
+									
+									printf("%s", buffer);
+									if (rd < 100) {
+										break;
+									}
+								}
+								printf("\n");
+							}
+						}
+						
+					}
+				} else {
+					printf("%s", bufin);
+				}
+
+			}
 		}
 	}
 	

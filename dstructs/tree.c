@@ -230,3 +230,34 @@ void state_write(struct state *st, int fd)
 		write(fd, vessel, 10);
 	}
 }
+
+
+void tree_write(struct tree *tre, int fd, char *path, int pos, int total)
+{
+	if (pos > 1) {
+		char percbuf[51];
+		memset(percbuf, '#', 51);
+		
+		int sz = ((struct state *)(tre->info))->size;
+		float perc = 1.0f * sz / total * 100;
+		int percint = (int)(perc / 2);
+		percbuf[percint] = '\0';
+		
+		int bufsz = strlen(path) + 150;
+		char buffer[bufsz];
+		
+		float flsz = (float)sz;
+		
+		if (flsz < (1 << 10)) {
+			snprintf(buffer, bufsz, "|-%s %.2f%% %.2fB %s\n", path, perc, flsz, percbuf);
+		} else if (sz < (1 << 20)) {
+			snprintf(buffer, bufsz, "|-%s %.2f%% %.2fKB %s\n", path, perc, flsz / (1 << 10), percbuf);
+		} else {
+			snprintf(buffer, bufsz, "|-%s %.2f%% %.2fMB %s\n", path, perc, flsz / (1 << 20), percbuf);
+		}
+		
+		write(fd, buffer, strlen(buffer));
+	}
+
+	hash_write(tre->hsh, fd, path, pos, total);
+}

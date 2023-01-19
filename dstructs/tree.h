@@ -41,4 +41,7 @@ void state_write(struct state *st, int fd);
 
 void tree_save(struct tree **tre, int fd);
 
+
+void tree_write(struct tree *tre, int fd, char *path, int pos, int total);
+
 #endif

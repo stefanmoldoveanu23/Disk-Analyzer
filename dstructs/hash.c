@@ -137,6 +137,26 @@ void list_save(struct list **lst, int fd)
 }
 
 
+void list_write(struct list *lst, int fd, char *path, int pos, int total)
+{
+	if (!lst) {
+		return;
+	}
+	
+	if (pos == 1) {
+		write(fd, "|\n", 2);
+	}
+	
+	snprintf(path + pos, strlen(lst->path) + 5, "%s/", lst->path);
+
+	tree_write(lst->node, fd, path, pos + strlen(lst->path) + 1, total);
+	
+	path[pos] = '\0';
+	
+	list_write(lst->next, fd, path, pos, total);
+}
+
+
 struct tree *hash_insert(struct hash *hsh, char *path)
 {
 	int key = get_key(path);
@@ -245,4 +265,12 @@ void hash_save(struct hash *hsh, int fd)
 	
 	hsh->size = 0;
 	write(fd, "-", 1);
+}
+
+
+void hash_write(struct hash hsh, int fd, char *path, int pos, int total)
+{
+	for (int i = 0; i < HASH_MOD; ++i) {
+		list_write(hsh.children[i], fd, path, pos, total);
+	}
 }

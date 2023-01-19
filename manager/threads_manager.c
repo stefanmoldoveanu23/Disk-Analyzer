@@ -698,6 +698,29 @@ void threads_get_all(struct threads_manager man, int fd)
 }
 
 
+void threads_result(struct threads_manager man, const int id, int fd)
+{
+	pthread_mutex_lock(&(man.analyses_mutex));
+	
+	struct analysis *anal;
+	
+	if (treap_find(man.analyses, id, &anal)) {
+		if (anal->status == ANALYSIS_COMPLETE) {
+			while (!write(fd, "1", 1));
+			analysis_report(fd, id);
+		} else {
+			while (!write(fd, "0", 1));
+			analysis_not_done(fd, id, anal);
+		}
+	} else {
+		while (!write(fd, "0", 1));
+		analysis_id_no_exists(fd, id);
+	}
+	
+	pthread_mutex_unlock(&(man.analyses_mutex));
+}
+
+
 void threads_shutdown(struct threads_manager *man)
 {
 	int fd = open(ANALYSES_PATH, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
