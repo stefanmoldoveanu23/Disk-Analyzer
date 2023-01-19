@@ -352,13 +352,14 @@ int threads_read_results(struct threads_manager *man)
 	
 	if (rd != 1) {
 		close(man->responses_connection.client_fd);
+		perror("Error reading result value");
 		return 1;
 	}
 
 	int id, cnt_dirs, cnt_files;
 	
 	if (threads_read_results_string(man->responses_connection.client_fd, buffer, 10)) {
-		perror("Error reading id response");
+		perror("Error reading id of result");
 		close(man->responses_connection.client_fd);
 		return 1;
 	}
@@ -541,9 +542,12 @@ void threads_suspend(struct threads_manager *man, const int id, int fd)
 	pthread_mutex_lock(&(man->analyses_mutex));
 	
 	if (treap_find(man->analyses, id, &anal)) {
-		if (anal->suspended != ANALYSIS_SUSPENDED && anal->status != ANALYSIS_COMPLETE && anal->pid != -1 && !kill(anal->pid, 0) && getpgid(getpid()) == getpgid(anal->pid)) {
-			kill(anal->pid, SIGTSTP);
-			anal->total_time += (time(NULL) - anal->last_start);
+		if (anal->suspended != ANALYSIS_SUSPENDED && anal->status != ANALYSIS_COMPLETE) {
+			if (anal->pid != -1 && !kill(anal->pid, 0) && getpgid(getpid()) == getpgid(anal->pid)) {
+				kill(anal->pid, SIGTSTP);
+				anal->total_time += (time(NULL) - anal->last_start);
+			}
+
 			anal->suspended = ANALYSIS_SUSPENDED;
 			analysis_suspended(fd, id, anal);
 		} else if (anal->suspended == ANALYSIS_SUSPENDED) {
@@ -566,15 +570,18 @@ void threads_resume(struct threads_manager *man, const int id, int fd)
 	pthread_mutex_lock(&(man->analyses_mutex));
 	
 	if (treap_find(man->analyses, id, &anal)) {
-		if (anal->suspended != ANALYSIS_RESUMED && anal->status != ANALYSIS_COMPLETE && anal->pid != -1 && !kill(anal->pid, 0) && getpgid(getpid()) == getpgid(anal->pid)) {
-			kill(anal->pid, SIGCONT);
-			anal->last_start = time(NULL);
+		if (anal->suspended != ANALYSIS_RESUMED) {
+			if (anal->pid != -1 && !kill(anal->pid, 0) && getpgid(getpid()) == getpgid(anal->pid)) {
+				kill(anal->pid, SIGCONT);
+				anal->last_start = time(NULL);
+			}
+
 			anal->suspended = ANALYSIS_RESUMED;
 			analysis_resumed(fd, id, anal);
-		} else if (anal->suspended == ANALYSIS_RESUMED) {
-			analysis_already_resumed(fd, id, anal);
-		} else {
+		} else if (anal->status == ANALYSIS_COMPLETE) {
 			analysis_already_done(fd, id, anal);
+		} else {
+			analysis_already_resumed(fd, id, anal);
 		}
 		
 	} else {
