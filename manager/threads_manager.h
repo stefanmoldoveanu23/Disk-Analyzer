@@ -36,7 +36,7 @@ int threads_read_results(struct threads_manager *man);
 int threads_add(struct threads_manager *man, struct analysis *anal, int fd);
 
 
-int threads_remove(struct threads_manager *man, const int id, int fd);
+void threads_remove(struct threads_manager *man, const int id, int fd);
 
 
 void threads_suspend(struct threads_manager *man, const int id, int fd);

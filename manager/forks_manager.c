@@ -91,6 +91,11 @@ int forks_add(struct forks_manager *man)
 	if (forks_solve(man)) {
 		forks_send_result(man, 0);
 	} else {
+		if (*(man->interrupted)) {
+			tree_clear(&(man->tre));
+			free(man->path);
+			return 0;
+		}
 		forks_send_result(man, 1);
 	}
 	
@@ -258,7 +263,11 @@ int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp)
 	}
 	
 	while (1) {
-		while (!(*(man->done)) && *(man->suspended));
+		if (*(man->interrupted)) {
+			return 0;
+		}
+		
+		while (!(*(man->interrupted)) && !(*(man->done)) && *(man->suspended));
 		sleep(1);
 		
 		if (time(NULL) - man->last_send >= 1) {

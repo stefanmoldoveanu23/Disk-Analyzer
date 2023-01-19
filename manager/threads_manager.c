@@ -575,7 +575,7 @@ void threads_resume(struct threads_manager *man, const int id, int fd)
 }
 
 
-int threads_remove(struct threads_manager *man, const int id, int fd)
+void threads_remove(struct threads_manager *man, const int id, int fd)
 {
 	
 	pthread_mutex_lock(&(man->analyses_mutex));
@@ -593,25 +593,24 @@ int threads_remove(struct threads_manager *man, const int id, int fd)
 		remove(name);
 		
 		if (getpgid(getpid()) == getpgid(trp->anal->pid)) {
-			kill(SIGINT, trp->anal->pid);
-			waitpid(trp->anal->pid, NULL, 0);
+			kill(trp->anal->pid, SIGINT);
 		}
 
 		pthread_mutex_lock(&(man->paths_mutex));
 		tree_remove(man->paths, trp->anal->path);
 		pthread_mutex_unlock(&(man->paths_mutex));
 		
-		free(trp->anal->path);
-		free(trp->anal);
-		trp->anal = NULL;
 		
 		pthread_mutex_lock(&(man->available_mutex));
 		treap_insert_node(&(man->available_ids), trp);
 		pthread_mutex_unlock(&(man->available_mutex));
-		
-		return 0;
+
+		analysis_removed(fd, id, trp->anal);
+		free(trp->anal->path);
+		free(trp->anal);
+		trp->anal = NULL;
 	} else {
-		return 1;
+		analysis_id_no_exists(fd, id);
 	}
 }
 

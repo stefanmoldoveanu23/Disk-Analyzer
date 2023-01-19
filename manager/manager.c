@@ -126,6 +126,8 @@ int main()
 		fman.handler = forkchild_handler;
 		
 		signal(SIGTERM, forkman_handler1);
+		signal(SIGCHLD, child_done_handler);
+		
 		do_forks_manager(&fman);
 	} else {
 		signal(SIGTERM, reqman_handler);
@@ -263,6 +265,10 @@ void *request_thread(void *v)
 			threads_resume(man, tsk.id, client_fd);
 			break;
 		}
+		case 4: {
+			threads_remove(man, tsk.id, client_fd);
+			break;
+		}
 	}
 	
 	
@@ -323,6 +329,8 @@ void do_forks_manager(struct forks_manager *man)
 		} else if (!ret) {
 			return;
 		}
+		
+		++cnt_forks;
 	}
 	
 	while (!done);
