@@ -1,4 +1,5 @@
 #include "forks_manager.h"
+#include "../dstructs/paths.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -14,7 +15,8 @@
 
 #define PORT_ACCEPTOR 8081
 #define PORT_RESPONSE 8082
-#define DIR_PATH "/var/lib/disk-analyzer/"
+
+//#define DIR_PATH "../data/"
 
 
 int forks_startup(struct forks_manager *man)
@@ -268,6 +270,7 @@ int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp)
 	}
 	
 	if (((struct state *)(curr->info))->done) {
+		//fts_set(ftsp, FTS_SKIP);
 		return 0;
 	}
 	

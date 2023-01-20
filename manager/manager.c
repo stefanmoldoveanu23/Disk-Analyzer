@@ -49,6 +49,7 @@ void child_done_handler(int signum) {
 }
 
 void resman_handler(int signum) {
+	printf("Hi4");
 	++done;
 	if (done >= 3) {
 		signal(SIGTERM, SIG_IGN);
@@ -56,16 +57,19 @@ void resman_handler(int signum) {
 }
 
 void reqman_handler(int signum) {
+	printf("Hi2\n");
 	signal(SIGTERM, resman_handler);
 	done = 1;
 }
 
 void forkman_handler2(int signum) {
+	printf("Hi3\n");
 	signal(SIGTERM, SIG_IGN);
 	done = 1;
 }
 
 void forkman_handler1(int signum) {
+	printf("Hiii\n");
 	signal(SIGTERM, forkman_handler2);
 	kill(pid, SIGTERM);
 }
@@ -104,8 +108,6 @@ void do_forks_manager(struct forks_manager *man);
 
 int main()
 {
-	daemon(1, 1);
-	
 	struct forks_manager fman;
 	if (forks_startup(&fman)) {
 		perror("Error starting fork manager.");

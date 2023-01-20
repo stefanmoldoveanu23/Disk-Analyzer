@@ -1,4 +1,5 @@
 #include "threads_manager.h"
+#include "../dstructs/paths.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,8 +20,8 @@
 #define PORT_REQUEST 8081
 #define PORT_ACCEPTOR_RESPONSES 8082
 
-#define ANALYSES_PATH "/var/lib/disk-analyzer/analyses"
-#define DIR_PATH "/var/lib/disk-analyzer/"
+//#define ANALYSES_PATH "/var/lib/disk-analyzer/analyses"
+//#define DIR_PATH "/var/lib/disk-analyzer/"
 
 
 int fork_request(int id, struct analysis *anal)

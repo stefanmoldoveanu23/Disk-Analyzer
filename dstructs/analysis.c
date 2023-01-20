@@ -1,4 +1,5 @@
 #include "analysis.h"
+#include "../dstructs/paths.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -12,7 +13,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#define DIR_PATH "/var/lib/disk-analyzer/"
+//#define DIR_PATH "/var/lib/disk-analyzer/"
 
 
 int read_string_by_size(char **ret, int sz, int fd)

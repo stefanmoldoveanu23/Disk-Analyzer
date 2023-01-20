@@ -1,13 +1,12 @@
 [Unit]
 Description= Disk Analyzer manager startup and shutdown helper
 
-#I will have to modify th onstart.sh path from setup to the working directory
-
 [Service]
 ExecStart=/home/characterme/Disk-Analyzer/manager/manager
 KillMode=process
 StandardOutput=journal+console
 TimeoutStopSec=10
+SendSIGKILL=no
 
 [Install]
 WantedBy=multi-user.target
