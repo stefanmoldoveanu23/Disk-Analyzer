@@ -32,8 +32,6 @@ int client_read_string(int fd, char *buffer, int sz)
 
 int main(int argc, char *argv[])
 {
-	daemon(1, 1);
-	
 	struct task tsk;
 	
 	if (get_task(argc, argv, &tsk)) {

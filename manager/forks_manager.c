@@ -16,8 +16,6 @@
 #define PORT_ACCEPTOR 8081
 #define PORT_RESPONSE 8082
 
-//#define DIR_PATH "../data/"
-
 
 int forks_startup(struct forks_manager *man)
 {
@@ -412,7 +410,7 @@ void forks_save(struct forks_manager *man)
 	char filepath[PATH_MAX];
 	memset(filepath, 0, PATH_MAX);
 	
-	if (snprintf(filepath, 8 + strlen(man->path) + 1, "%s%d", DIR_PATH, man->id) < 0) {
+	if (snprintf(filepath, strlen(DIR_PATH) + 11, "%s%d", DIR_PATH, man->id) < 0) {
 		tree_clear(&(man->tre));
 		free(man->path);
 		return;
@@ -439,7 +437,7 @@ void forks_write(struct forks_manager *man)
 	char filepath[PATH_MAX];
 	memset(filepath, 0, PATH_MAX);
 	
-	if (snprintf(filepath, 8 + strlen(man->path) + 1, "%s%d", DIR_PATH, man->id) < 0) {
+	if (snprintf(filepath, strlen(DIR_PATH) + 11, "%s%d", DIR_PATH, man->id) < 0) {
 		tree_clear(&(man->tre));
 		free(man->path);
 		return;

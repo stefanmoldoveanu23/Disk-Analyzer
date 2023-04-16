@@ -38,6 +38,8 @@ volatile sig_atomic_t cnt_forks = 0;
 volatile sig_atomic_t cnt_need = 0;
 
 volatile sig_atomic_t done = 0;
+volatile sig_atomic_t resman_done = 0;
+
 volatile sig_atomic_t interrupted = 0;
 volatile sig_atomic_t suspended = 0;
 
@@ -49,27 +51,31 @@ void child_done_handler(int signum) {
 }
 
 void resman_handler(int signum) {
-	printf("Hi4");
 	++done;
+	if (done == 2) {
+		kill(getppid(), SIGUSR1);
+	}
 	if (done >= 3) {
 		signal(SIGTERM, SIG_IGN);
 	}
 }
 
 void reqman_handler(int signum) {
-	printf("Hi2\n");
 	signal(SIGTERM, resman_handler);
 	done = 1;
 }
 
+void forkman_resman_done(int signum) {
+	signal(SIGUSR1, SIG_IGN);
+	resman_done = 1;
+}
+
 void forkman_handler2(int signum) {
-	printf("Hi3\n");
 	signal(SIGTERM, SIG_IGN);
 	done = 1;
 }
 
 void forkman_handler1(int signum) {
-	printf("Hiii\n");
 	signal(SIGTERM, forkman_handler2);
 	kill(pid, SIGTERM);
 }
@@ -108,6 +114,8 @@ void do_forks_manager(struct forks_manager *man);
 
 int main()
 {
+	daemon(1, 1);
+	
 	struct forks_manager fman;
 	if (forks_startup(&fman)) {
 		perror("Error starting fork manager.");
@@ -129,6 +137,7 @@ int main()
 		
 		signal(SIGTERM, forkman_handler1);
 		signal(SIGCHLD, child_done_handler);
+		signal(SIGUSR1, forkman_resman_done);
 		
 		do_forks_manager(&fman);
 	} else {
@@ -351,7 +360,7 @@ void do_forks_manager(struct forks_manager *man)
 	
 	kill(0, SIGTERM);
 	
-	while (cnt_forks);
+	while (cnt_forks || !resman_done);
 	
 	kill(pid, SIGTERM);
 	

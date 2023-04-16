@@ -1,0 +1,28 @@
+1
+Path	Usage	Size	Amount
+/home/characterme/Documents	100%	1.85MB	##################################################
+|
+|-/Disk-Analyzer/ 99.58% 1.84MB #################################################
+|-/Disk-Analyzer/data/ 0.47% 8.98KB 
+|-/Disk-Analyzer/client/ 6.90% 130.52KB ###
+|-/Disk-Analyzer/setup/ 1.39% 26.29KB 
+|-/Disk-Analyzer/dstructs/ 2.03% 38.39KB #
+|-/Disk-Analyzer/.git/ 72.83% 1.35MB ####################################
+|-/Disk-Analyzer/.git/hooks/ 1.64% 30.96KB 
+|-/Disk-Analyzer/.git/info/ 0.44% 8.23KB 
+|-/Disk-Analyzer/.git/logs/ 2.15% 40.59KB #
+|-/Disk-Analyzer/.git/logs/refs/ 1.71% 32.39KB 
+|-/Disk-Analyzer/.git/logs/refs/remotes/ 0.86% 16.20KB 
+|-/Disk-Analyzer/.git/logs/refs/remotes/origin/ 0.43% 8.20KB 
+|-/Disk-Analyzer/.git/logs/refs/heads/ 0.43% 8.20KB 
+|-/Disk-Analyzer/.git/refs/ 2.12% 40.07KB #
+|-/Disk-Analyzer/.git/refs/remotes/ 0.85% 16.03KB 
+|-/Disk-Analyzer/.git/refs/remotes/origin/ 0.42% 8.03KB 
+|-/Disk-Analyzer/.git/refs/heads/ 0.42% 8.04KB 
+|-/Disk-Analyzer/.git/refs/tags/ 0.42% 8.00KB 
+|-/Disk-Analyzer/.git/objects/ 65.46% 1.21MB ################################
+|-/Disk-Analyzer/.git/objects/info/ 0.42% 8.00KB 
+|-/Disk-Analyzer/.git/objects/pack/ 64.61% 1.19MB ################################
+|-/Disk-Analyzer/.git/branches/ 0.42% 8.00KB 
+|-/Disk-Analyzer/manager/ 14.32% 270.84KB #######
+|-/Disk-Analyzer/socket/ 0.61% 11.60KB 

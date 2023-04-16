@@ -107,6 +107,7 @@ int threads_startup(struct threads_manager *man)
 	srand(time(NULL));
 	
 	int fd = open(ANALYSES_PATH, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR);
+	printf("%s\n", ANALYSES_PATH);
 	if (fd < 0) {
 		perror("Error opening data file");
 		return -1;
@@ -606,9 +607,9 @@ void threads_remove(struct threads_manager *man, const int id, int fd)
 	pthread_mutex_unlock(&(man->analyses_mutex));
 	
 	if (trp) {
-		char name[40];
-		memset(name, 0, 20);
-		snprintf(name, 40, "%s%d", DIR_PATH, id);
+		char name[60];
+		memset(name, 0, 60);
+		snprintf(name, 60, "%s%d", DIR_PATH, id);
 		
 		remove(name);
 		
