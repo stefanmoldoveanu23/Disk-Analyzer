@@ -1,6 +1,8 @@
 # Disk-Analyzer
 OS Project - Disk Analyzer
 
+To run the app go to the Disk-Analyzer directory, run "make" to install it, and then you can run "make open" and "make close" to open and close it.
+
 The project will analyze a disk using the [fts library](https://man7.org/linux/man-pages/man3/fts.3.html) and offer information.
 ## Options:
 1. Begin analysis of directory.
@@ -10,6 +12,19 @@ The project will analyze a disk using the [fts library](https://man7.org/linux/m
 4. Print status of analysis(pending, in progress, complete).
 5. Print analysis result.
 6. List all analysis tasks, with ID and path.
+
+```
+Usage: da [OPTION]... [DIR]...
+Analyze the space occupied by the directory at [DIR]
+	-a, --add analyze a new directory path for disk usage
+	-p, --priority set priority for the new analysis (works only with -a argument)
+	-S, --suspend <id> suspend task with <id>
+	-R, --resume <id> resume task with <id>
+	-r, --remove <id> remove the analysis with the given <id>
+	-i, --info <id> print status about the analysis with <id> (pending, progress, d
+	-l, --list list all analysis tasks, with their ID and the corresponding root p
+	-p, --print <id> print analysis report for those tasks that are "done"
+```
 
 Options will be handled using the [getopt](https://man7.org/linux/man-pages/man3/getopt.3.html) functionalities.
 
@@ -23,6 +38,46 @@ A manager will receive requests for clients.
 5. Request status of analysis with given ID.
 6. Request analysis result.
 7. Request list of all analysis tasks, with ID and path.
+
+## Example:
+```
+	$> da -a /home/user/my_repo -p 3
+	Created analysis task with ID '2' for '/home/user/my_repo' and priority 'high'.
+	
+	$> da -l
+	ID PRI Path Done Status Details
+	2 *** /home/user/my_repo 45% in progress 2306 files, 11 dirs
+	
+	$> da -l	
+	ID PRI Path Done Status Details
+	2 *** /home/user/my_repo 75% in progress 3201 files, 15 dirs
+	
+	$> da -p 2
+	Path Usage Size Amount
+	/home/user/my_repo 100% 100MB #########################################
+	|
+	|-/repo1/ 31.3% 31.3MB #############
+	|-/repo1/binaries/ 15.3% 15.3MB ######
+	|-/repo1/src/ 5.7% 5.7MB ##
+	|-/repo1/releases/ 9.0% 9.0MB ####
+	|
+	|-/repo2/ 52.5% 52.5MB #####################
+	|-/repo2/binaries/ 45.4% 45.4MB ##################
+	|-/repo2/src/ 5.4% 5.4MB ##
+	|-/repo2/releases/ 2.2% 2.2MB #
+	|
+	|-/repo3/ 17.2% 17.2MB ########
+	[...]
+
+	$> da -a /home/user/my_repo/repo2
+	Directory 'home/user/my_repo/repo2' is already included in analysis with ID '2'
+	
+	$> da -r 2
+	Removed analysis task with ID '2', status ’done’ for '/home/user/my_repo'
+	
+	$> da -p 2
+	No existing analysis for task ID '2'
+```
 
 ## I will also implement multiple data structures:
 - data structure for analysis job; will hold flags for status, suspended, etc. It will also have a mutex, because multiple requests might use one analysis at the same time. It will also hold the file descriptor for the file that holds the result;
@@ -63,38 +118,3 @@ When reading an analysis result, input needs to know first how long it is, in or
 
 
 A signal handler function can only do asynchronous actions, because it halts the program even if it is inside an operation. If we want to interact with the rest of the program, we will need to use the [sig_atomic_t](https://www.alphacodingskills.com/c/notes/c-signal-sig-atomic-t.php) type. A variable of this type can safely be modified inside of a signal handler.
-
-
-### Using an individual mutex for each analysis job is a sweet idea, but it DOESN'T WORK because of the removal request!!! A different request may be told that the id exists, and before getting the chance to lock the mutex, the removal request removes the analysis with that id, and now to mutex lock gives an error. The only solution is to accept a structure-wide mutex. Fortunately, the only time-consuming requests are creating and removing an analysis, but these ones already needed to lock the entire structure; all the ather requests just need to read some information, so it's acceptable.
-
-
-## TASKS:
-- [x] Learn daemons;
-	- Intentionally [orphaned processes](https://stackoverflow.com/a/17955149). Only the parent process runs in the foreground, but the child processes will run in the background.
-- [x] Test using getcwd for caller working directory;
-	- The "da" command will run an executable from a different directory. If user doesn't provide full path, I will use getcwd in order to complete it. However, I needed to check if getcwd returned the current directory of the caller, or of the executable.
-- [x] Implement socket communication(with daemons):
-	- [x] Implement multiple client management;
-	- [x] Introduce threads to multiple client management;
-- [x] Test using dirent to parse through directory contents;
-- [x] Implement systemd service to execute program at startup and shutdown;
-	- Since the manager needs to run at all times, there needs to be a way to make it run automatically at system startup, and a way to ask it to close itself(and handle pending requests) at shutdown. At shutdown it will send the manager(and its children) the SIGTERM signal.
-- [x] Implement data structures for information management:
-	- [x] Implement header file;
-	- [x] Implement source file;
-- [ ] Implement client functionality;
-	- [x] Implement getopt for option handling;
-	- [x] Implement socket connection functionality;
-	- [ ] I just need to receive the result and print it;
-- [ ] Implement manager functionality:
-	- [x] Implement trie data structure for storing paths;
-	- [ ] Implement thread manager:
-		- [x] Implement treap data structure for storing analyses;
-		- [x] Implement request thread(mostly);
-		- [ ] Implement results thread(depending on implementation I might give up on this);
-		- [x] Handle startup;
-		- [ ] Handle shutdown(a bit);
-	- [ ] Implement fork manager:
-		- [ ] Implement analysis that handles interruption;
-		- [ ] Handle shutdown;
-- TBD

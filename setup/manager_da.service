@@ -2,6 +2,7 @@
 Description= Disk Analyzer manager startup and shutdown helper
 
 [Service]
+Type=forking
 ExecStart=/home/characterme/Documents/Disk-Analyzer/manager/manager
 KillMode=process
 StandardOutput=journal+console

@@ -119,7 +119,7 @@ int forks_read_progress(struct forks_manager *man)
 	char filepath[PATH_MAX];
 	memset(filepath, '\0', PATH_MAX);
 	
-	snprintf(filepath, 8 + strlen(man->path) + 1, "%s%d", DIR_PATH, man->id);
+	snprintf(filepath, strlen(DIR_PATH) + 11, "%s%d", DIR_PATH, man->id);
 	
 	int fd = open(filepath, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR);
 	if (fd == -1) {
@@ -267,11 +267,6 @@ int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp)
 		curr->info = st;
 	}
 	
-	if (((struct state *)(curr->info))->done) {
-		//fts_set(ftsp, FTS_SKIP);
-		return 0;
-	}
-	
 	while (1) {
 		if (*(man->interrupted)) {
 			return 0;
@@ -334,6 +329,11 @@ int forks_fts_parc(struct forks_manager *man, struct tree *curr, FTS *ftsp)
 					chld = hash_find(curr->hsh, nxt->fts_name);
 				}
 				
+				if (curr->info && ((struct state *)(curr->info))->done) {
+					fts_set(ftsp, nxt, FTS_SKIP);
+					break;
+				}
+				
 				if (forks_fts_parc(man, chld, ftsp)) {
 					return 1;
 				}
@@ -364,20 +364,7 @@ int forks_solve(struct forks_manager *man)
 		return 1;
 	}
 	
-	struct tree *curr = man->tre;
-	while (1) {
-		int found = 0;
-		for (int i = 0; i < HASH_MOD; ++i) {
-			if (curr->hsh.children[i]) {
-				curr = curr->hsh.children[i]->node;
-				found = 1;
-				break;
-			}
-		}
-		if (!found) {
-			break;
-		}
-	}
+	struct tree *curr = tree_get_path(man->tre, man->path);
 	
 	if (curr->info && ((struct state *)(curr->info))->done) {
 		return 0;

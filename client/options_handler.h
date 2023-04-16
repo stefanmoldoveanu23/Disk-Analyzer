@@ -5,7 +5,7 @@
 #include "getopt.h"
 
 extern const char *options;
-extern const struct option long_options[9];
+extern const struct option long_options[10];
 
 /// generate task from arguments
 int get_task(const int argc, char **argv, struct task *tsk);

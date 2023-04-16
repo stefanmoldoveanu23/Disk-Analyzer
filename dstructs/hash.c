@@ -205,6 +205,7 @@ int hash_build(struct hash *hsh, int fd)
 				free(name);
 				return 1;
 			}
+			printf("Name: %s\n", name);
 			
 			struct tree *nxt = hash_insert(hsh, name);
 			if (!nxt) {

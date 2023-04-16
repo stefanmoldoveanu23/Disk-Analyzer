@@ -24,6 +24,9 @@ int tree_insert(struct tree *tre, char *path, void *info);
 int tree_build(struct tree *tre, int fd);
 
 
+struct tree *tree_get_path(struct tree *tre, char *path);
+
+
 int tree_find_prefix(const struct tree *tre, char *path, void **info);
 
 

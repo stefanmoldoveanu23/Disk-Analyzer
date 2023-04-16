@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-const char *options = "a:p:S:R:r:i:l";
+const char *options = "a:p:S:R:r:i:lh";
 const struct option long_options[] = {
 		{"add", required_argument, 0, 'a'},
 		{"priority", required_argument, 0, 'p'},
@@ -15,6 +15,7 @@ const struct option long_options[] = {
 		{"info", required_argument, 0, 'i'},
 		{"list", no_argument, 0, 'l'},
 		{"print", required_argument, 0, 'p'},
+		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}
 	};
 
@@ -68,6 +69,10 @@ int get_task(const int argc, char **argv, struct task *tsk)
 		case 'p': {
 			tsk->cnt = 7;
 			tsk->id = atoi(optarg);
+			break;
+		}
+		case 'h': {
+			tsk->cnt = 8;
 			break;
 		}
 	}

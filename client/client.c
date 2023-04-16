@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 			}
 			
 		}
-	} else {
+	} else if (tsk.cnt == 7) {
 		char sol;
 		int rd = 0;
 		while (!rd) {
@@ -191,6 +191,16 @@ int main(int argc, char *argv[])
 
 			}
 		}
+	} else {
+		printf("Usage: da [OPTION]... [DIR]...\nAnalyze the space occupied by the directory at [DIR]\n\
+	-a, --add analyze a new directory path for disk usage\n\
+	-p, --priority set priority for the new analysis (works only with -a argument)\n\
+	-S, --suspend <id> suspend task with <id>\n\
+	-R, --resume <id> resume task with <id>\n\
+	-r, --remove <id> remove the analysis with the given <id>\n\
+	-i, --info <id> print status about the analysis with <id> (pending, progress, d\n\
+	-l, --list list all analysis tasks, with their ID and the corresponding root p\n\
+	-p, --print <id> print analysis report for those tasks that are \"done\"\n");
 	}
 	
 	close(connection.server_fd);

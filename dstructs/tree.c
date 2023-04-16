@@ -78,6 +78,23 @@ int tree_build(struct tree *tre, int fd)
 }
 
 
+struct tree *tree_get_path(struct tree *tre, char *path)
+{
+	char *parse = path;
+	while (*(parse += strspn(parse, "/")) != '\0') {
+		struct tree *nxt = hash_find(tre->hsh, parse);
+		if (!nxt) {
+			return NULL;
+		}
+		
+		tre = nxt;
+		parse += strcspn(parse, "/");
+	}
+	
+	return tre;
+}
+
+
 int tree_find_prefix(const struct tree *tre, char *path, void **info)
 {
 	if (tre->info) {
@@ -178,6 +195,7 @@ struct state *state_read(int fd)
 		return NULL;
 	}
 	
+	printf("Exists: %c\n", exists[0]);
 	if (exists[0] == '0') {
 		errno = 0;
 		return NULL;
@@ -195,6 +213,7 @@ struct state *state_read(int fd)
 	}
 	
 	st->done = done[0] - '0';
+	printf("Done: %d\n", st->done);
 	
 	char buffer[11];
 	buffer[10] = '\0';
